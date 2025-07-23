@@ -46,6 +46,19 @@
 
           # Dependencies
           alsa-lib
+          cmake
+          gcc
+          xorg.libX11
+          xorg.libXext
+          xorg.libXft
+          xorg.libXinerama
+          xorg.libXcursor
+          xorg.libXrender
+          xorg.libXfixes
+          pango
+          glib
+          mesa
+          libGLU
         ];
 
         env = {
@@ -53,6 +66,7 @@
           RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
         };
       };
+      nativeBuildInputs = with pkgs; [pkg-config];
     });
   };
 }
