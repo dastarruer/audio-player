@@ -14,9 +14,9 @@ fn main() {
 
     // Create a button
     let mut btn = button::Button::default()
-        .with_size(80, 30)
+        .with_size(30, 30)
         .with_pos(155, 200)
-        .with_label("Pause");
+        .with_label("");
 
     theme_button(&mut btn);
 
@@ -26,8 +26,8 @@ fn main() {
 
     // Add an action to the button
     btn.set_callback(move |btn| match btn.label().as_str() {
-        "Play" => btn.set_label("Pause"),
-        "Pause" => btn.set_label("Play"),
+        "" => btn.set_label(""),
+        "" => btn.set_label(""),
         _ => unreachable!(),
     });
 
@@ -38,9 +38,6 @@ fn theme_button(btn: &mut button::Button) {
     // Remove focus border around button
     btn.clear_visible_focus();
 
-    // Set color
-    btn.set_color(Color::from_rgb(255, 0, 0));
-
-    // Set color when clicked
-    btn.set_selection_color(Color::from_rgb(0, 255, 0));
+    // Remove button background
+    btn.set_frame(fltk::enums::FrameType::NoBox);
 }
