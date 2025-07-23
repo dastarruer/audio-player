@@ -43,6 +43,9 @@
           cargo-edit
           cargo-watch
           rust-analyzer
+
+          # Dependencies
+          alsa-lib
         ];
 
         env = {
