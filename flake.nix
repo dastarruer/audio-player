@@ -36,16 +36,15 @@
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
         packages = with pkgs; [
+          # Rust packages
           rustToolchain
-          openssl
           pkg-config
-          cargo-deny
-          cargo-edit
-          cargo-watch
           rust-analyzer
 
-          # Dependencies
+          # rodio dependencies
           alsa-lib
+
+          # fltk dependencies
           cmake
           gcc
           xorg.libX11
