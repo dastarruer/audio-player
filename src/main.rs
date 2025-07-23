@@ -5,17 +5,20 @@ fn main() {
     let a = app::App::default().with_scheme(app::Scheme::Gtk);
 
     // Create a new window
-    let win_width = 400;
-    let win_height = 300;
+    const WIN_WIDTH: i32 = 400;
+    const WIN_HEIGHT: i32 = 300;
     let mut win = window::Window::default()
-        .with_size(win_width, win_height)
+        .with_size(WIN_WIDTH, WIN_HEIGHT)
         .with_label("My window");
     win.set_color(Color::White);
 
     // Create a button
+    const BTN_SIZE: i32 = 30;
+    const BTN_X: i32 = (WIN_WIDTH - BTN_SIZE) / 2; // Center the button horizontally
+    const BTN_Y: i32 = 200;
     let mut btn = button::Button::default()
-        .with_size(30, 30)
-        .with_pos(155, 200)
+        .with_size(BTN_SIZE, BTN_SIZE)
+        .with_pos(BTN_X, BTN_Y)
         .with_label("");
 
     theme_button(&mut btn);
