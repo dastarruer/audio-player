@@ -29,8 +29,8 @@ impl App {
         }
     }
 
-    /// Show the GUI to the user
-    pub fn show_window(&mut self) {
+    /// Run the app
+    pub fn run(&mut self) {
         self.window.end();
         self.window.show();
 
