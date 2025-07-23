@@ -5,4 +5,7 @@ edition = "2024"
 
 [dependencies]
 fltk = "1.5.9"
+fltk-flex = "0.2.1"
+fltk-theme = "0.7.9"
 rodio = "0.21.1"
+theme = "0.0.3"

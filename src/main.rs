@@ -1,7 +1,8 @@
 use fltk::{app, button, prelude::*, window};
+use fltk_theme::{ThemeType, WidgetTheme};
 
 fn main() {
-    let a = app::App::default();
+    let a = app::App::default().with_scheme(app::Scheme::Gtk);
 
     // Create a new window
     let win_width = 400;

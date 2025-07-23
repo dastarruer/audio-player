@@ -35,7 +35,10 @@ name = "audio_player"
 version = "0.1.0"
 dependencies = [
  "fltk",
+ "fltk-flex",
+ "fltk-theme",
  "rodio",
+ "theme",
 ]
 
 [[package]]
@@ -227,6 +230,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fltk-flex"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58c935b6cbf53a3681beef6339ca0edbfdd091c0f00a275d886107ed1a66caca"
+dependencies = [
+ "fltk",
+]
+
+[[package]]
 name = "fltk-sys"
 version = "1.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -234,6 +246,15 @@ checksum = "de39f27a66d3ceefca611ee2db890369c6846fde4de7b5fd7cdedd9ce0c432f8"
 dependencies = [
  "cmake",
  "cmk",
+]
+
+[[package]]
+name = "fltk-theme"
+version = "0.7.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eac14d47a555db231b4ce9729118a7c57c8a21714af008b8e9ae627998edb7a"
+dependencies = [
+ "fltk",
 ]
 
 [[package]]
@@ -563,6 +584,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde"
+version = "1.0.219"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f0e2c6ed6606019b4e29e69dbaba95b11854410e5347d525002456dbbb786b6"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.219"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b0276cf7f2c73365f7157c8123c21cd9a50fbbd844757af28ca1f5925fc2a00"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -724,6 +765,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "theme"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5379f4c4eb851af44d4d818ba43fac8cff83e9b8e624aedc8a3346ca45065fe"
+dependencies = [
+ "serde",
+ "web-sys",
 ]
 
 [[package]]
