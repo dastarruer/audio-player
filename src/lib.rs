@@ -48,10 +48,13 @@ impl App {
 
     /// Create the play button and theme it
     fn create_play_button(size: i32, x: i32, y: i32) -> button::Button {
+        const PLAY_BUTTON: &str = "";
+        const PAUSE_BUTTON: &str = "";
+
         let mut btn = button::Button::default()
             .with_size(size, size)
             .with_pos(x, y)
-            .with_label("");
+            .with_label(PAUSE_BUTTON);
 
         // Remove focus border around button
         btn.clear_visible_focus();
@@ -61,8 +64,8 @@ impl App {
 
         // Switch between play/pause icons on button click
         btn.set_callback(move |btn| match btn.label().as_str() {
-            "" => btn.set_label(""),
-            "" => btn.set_label(""),
+            PLAY_BUTTON => btn.set_label(PAUSE_BUTTON),
+            PAUSE_BUTTON => btn.set_label(PLAY_BUTTON),
             _ => unreachable!(),
         });
 
