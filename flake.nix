@@ -48,9 +48,6 @@
         env = {
           # Required by rust-analyzer
           RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
-
-          # Remove dead code and unused import warnings, not necessary during testing
-          RUSTFLAGS = "-A unused-imports -A dead-code";
         };
       };
     });
