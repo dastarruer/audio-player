@@ -23,9 +23,9 @@ fn play_audio(file_path: &'static str) {
         // Load sound from file
         let file = BufReader::new(File::open(file_path).unwrap());
 
-        let _sink = rodio::play(&stream_handle.mixer(), file).unwrap();
+        let sink = rodio::play(&stream_handle.mixer(), file).unwrap();
 
         // Since audio plays in seperate thread, block current thread from terminating
-        std::thread::sleep(std::time::Duration::from_secs(5));
+        sink.sleep_until_end();
     });
 }
