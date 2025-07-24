@@ -4,6 +4,7 @@ use audio_player::App;
 use rodio::{Decoder, OutputStream, source::Source};
 use std::fs::File;
 use std::io::BufReader;
+use std::process::exit;
 use std::thread;
 
 fn main() {
@@ -21,9 +22,22 @@ fn play_audio(file_path: &'static str) {
             rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
 
         // Load sound from file
-        let file = BufReader::new(File::open(file_path).unwrap());
+        let file = match File::open(file_path) {
+            Ok(file) => BufReader::new(file),
+            Err(_) => {
+                println!("File path does not exist. Exiting...");
+                exit(1);
+            }
+        };
 
-        let sink = rodio::play(&stream_handle.mixer(), file).unwrap();
+        // Play audio
+        let sink = match rodio::play(&stream_handle.mixer(), file) {
+            Ok(sink) => sink,
+            Err(_) => {
+                println!("Invalid file type.");
+                exit(1);
+            }
+        };
 
         // Since audio plays in seperate thread, block current thread from terminating
         sink.sleep_until_end();
