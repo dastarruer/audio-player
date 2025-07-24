@@ -1,5 +1,5 @@
-extern crate audio_player;
-use audio_player::App;
+mod app;
+use app::App;
 
 fn main() {
     let mut app = App::new();
