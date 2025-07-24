@@ -1,10 +1,23 @@
 use fltk::{app, button, enums::Color, prelude::*, window};
 
+use rodio::Sink;
+use rodio::{Decoder, OutputStream, source::Source};
+use std::fs::File;
+use std::io::BufReader;
+use std::process::exit;
+use std::sync::{Arc, Mutex};
+use std::thread;
+
 /// Stores the components of the GUI
 pub struct App {
     app: app::App,
     window: window::DoubleWindow,
+
+    /// Button to play/pause audio
     play_button: button::Button,
+
+    /// Audio sink to control playback
+    sink: Arc<Mutex<Option<Sink>>>,
 }
 
 impl App {
@@ -22,19 +35,63 @@ impl App {
         const BTN_Y: i32 = 200;
         let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y);
 
+        // Create a placeholder value to use for `sink` in App struct
+        let sink = Arc::new(Mutex::new(None));
+
         App {
             app,
             window,
             play_button,
+            sink,
         }
     }
 
     /// Run the app
     pub fn run(&mut self) {
+        // Show the window
         self.window.end();
         self.window.show();
 
+        // Play the audio
+        self.play_audio();
+
+        // Run the app
         self.app.run().unwrap();
+    }
+
+    fn play_audio(&self) {
+        let sink_ref = Arc::clone(&self.sink);
+
+        thread::spawn(move || {
+            // Get an output stream handle to the default physical sound device.
+            let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
+                .expect("open default audio stream");
+
+            // Load sound from file
+            let file_path = "test.mp3";
+            let file = match File::open(file_path) {
+                Ok(file) => BufReader::new(file),
+                Err(_) => {
+                    println!("File path does not exist. Exiting...");
+                    exit(1);
+                }
+            };
+
+            // Play audio
+            let sink = match rodio::play(&stream_handle.mixer(), file) {
+                Ok(sink) => sink,
+                Err(_) => {
+                    println!("Invalid file type.");
+                    exit(1);
+                }
+            };
+
+            // Since audio plays in seperate thread, block current thread from terminating
+            sink.sleep_until_end();
+
+            let mut mutex_guard = sink_ref.lock().unwrap();
+            *mutex_guard = Some(sink);
+        });
     }
 
     /// Create the window and theme it
