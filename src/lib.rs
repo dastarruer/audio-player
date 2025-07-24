@@ -59,6 +59,7 @@ impl App {
         self.app.run().unwrap();
     }
 
+    /// Play audio and set self.sink to an audio sink
     fn play_audio(&self) {
         let sink_ref = Arc::clone(&self.sink);
 
