@@ -8,65 +8,29 @@ use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// Stores the components of the GUI
-pub struct App {
-    app: app::App,
-    window: window::DoubleWindow,
-
-    /// Button to play/pause audio
-    play_button: button::Button,
-
+/// Store the functionality for playing audio and other functions
+struct AudioHandler {
     /// Audio sink to control playback
     sink: Arc<Mutex<Option<Sink>>>,
 
-    _stream: Arc<Mutex<Option<OutputStream>>>,
+    /// Audio stream
+    stream: Arc<Mutex<Option<OutputStream>>>,
 }
 
-impl App {
-    /// Create the new App
-    pub fn new() -> App {
-        let app = app::App::default().with_scheme(app::Scheme::Gtk);
-
-        // Create a new window
-        const WIN_WIDTH: i32 = 400;
-        const WIN_HEIGHT: i32 = 300;
-        let window = App::create_window(WIN_WIDTH, WIN_HEIGHT);
-
-        // Create a placeholder value to use for `sink` and `_stream` in App struct
+impl AudioHandler {
+    /// Return an empty instance of AudioPlayer
+    fn new() -> AudioHandler {
+        // Use None for now; this will become populated in self.play_audio
         let sink = Arc::new(Mutex::new(None));
-        let _stream = Arc::new(Mutex::new(None));
+        let stream = Arc::new(Mutex::new(None));
 
-        const BTN_SIZE: i32 = 30;
-        const BTN_X: i32 = (WIN_WIDTH - BTN_SIZE) / 2; // Center the button horizontally
-        const BTN_Y: i32 = 200;
-        let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y, &sink);
-
-        App {
-            app,
-            window,
-            play_button,
-            sink,
-            _stream,
-        }
+        AudioHandler { sink, stream }
     }
 
-    /// Run the app
-    pub fn run(&mut self) {
-        // Show the window
-        self.window.end();
-        self.window.show();
-
-        // Play the audio
-        self.play_audio();
-
-        // Run the app
-        self.app.run().unwrap();
-    }
-
-    /// Play audio and set self.sink to an audio sink
+    /// Play audio and initialize self.sink and self.stream
     fn play_audio(&self) {
         let sink_ref = Arc::clone(&self.sink);
-        let stream_ref = Arc::clone(&self._stream);
+        let stream_ref = Arc::clone(&self.stream);
 
         thread::spawn(move || {
             // Get an output stream handle to the default physical sound device.
@@ -109,6 +73,55 @@ impl App {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
         });
+    }
+}
+
+/// Stores the components of the GUI
+pub struct App {
+    app: app::App,
+    window: window::DoubleWindow,
+
+    /// Button to play/pause audio
+    play_button: button::Button,
+
+    /// An AudioHandler, which will handle audio related functions such as playing audio
+    audio_handler: AudioHandler,
+}
+
+impl App {
+    /// Create the new App
+    pub fn new() -> App {
+        let app = app::App::default().with_scheme(app::Scheme::Gtk);
+        let audio_handler = AudioHandler::new();
+        // Create a new window
+        const WIN_WIDTH: i32 = 400;
+        const WIN_HEIGHT: i32 = 300;
+        let window = App::create_window(WIN_WIDTH, WIN_HEIGHT);
+
+        const BTN_SIZE: i32 = 30;
+        const BTN_X: i32 = (WIN_WIDTH - BTN_SIZE) / 2; // Center the button horizontally
+        const BTN_Y: i32 = 200;
+        let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y, &audio_handler.sink);
+
+        App {
+            app,
+            window,
+            play_button,
+            audio_handler,
+        }
+    }
+
+    /// Run the app
+    pub fn run(&mut self) {
+        // Show the window
+        self.window.end();
+        self.window.show();
+
+        // Play the audio
+        self.audio_handler.play_audio();
+
+        // Run the app
+        self.app.run().unwrap();
     }
 
     /// Create the window and theme it
