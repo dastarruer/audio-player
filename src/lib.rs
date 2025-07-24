@@ -30,13 +30,14 @@ impl App {
         const WIN_HEIGHT: i32 = 300;
         let window = App::create_window(WIN_WIDTH, WIN_HEIGHT);
 
+        // Create a placeholder value to use for `sink` in App struct
+        let sink = Arc::new(Mutex::new(None));
+
         const BTN_SIZE: i32 = 30;
         const BTN_X: i32 = (WIN_WIDTH - BTN_SIZE) / 2; // Center the button horizontally
         const BTN_Y: i32 = 200;
-        let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y);
+        let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y, &sink);
 
-        // Create a placeholder value to use for `sink` in App struct
-        let sink = Arc::new(Mutex::new(None));
 
         App {
             app,
@@ -105,9 +106,17 @@ impl App {
     }
 
     /// Create the play button and theme it
-    fn create_play_button(size: i32, x: i32, y: i32) -> button::Button {
+    fn create_play_button(
+        size: i32,
+        x: i32,
+        y: i32,
+        sink: &Arc<Mutex<Option<Sink>>>,
+    ) -> button::Button {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
+
+        // Clone the reference to the sink
+        let sink_ref = Arc::clone(&sink);
 
         let mut btn = button::Button::default()
             .with_size(size, size)
@@ -120,11 +129,25 @@ impl App {
         // Remove button background
         btn.set_frame(fltk::enums::FrameType::NoBox);
 
-        // Switch between play/pause icons on button click
-        btn.set_callback(move |btn| match btn.label().as_str() {
-            PLAY_BUTTON => btn.set_label(PAUSE_BUTTON),
-            PAUSE_BUTTON => btn.set_label(PLAY_BUTTON),
-            _ => unreachable!(),
+        // Define a function to execute once the button is clicked
+        btn.set_callback(move |btn| {
+            // Get the audio sink
+            let sink = sink_ref.lock().unwrap();
+
+            if let Some(sink) = &*sink {
+                // Play/pause audio on button click
+                match btn.label().as_str() {
+                    PLAY_BUTTON => {
+                        btn.set_label(PAUSE_BUTTON);
+                        sink.pause();
+                    }
+                    PAUSE_BUTTON => {
+                        btn.set_label(PLAY_BUTTON);
+                        sink.play();
+                    }
+                    _ => unreachable!(),
+                }
+            }
         });
 
         btn
