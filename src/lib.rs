@@ -18,6 +18,8 @@ pub struct App {
 
     /// Audio sink to control playback
     sink: Arc<Mutex<Option<Sink>>>,
+
+    _stream: Arc<Mutex<Option<OutputStream>>>,
 }
 
 impl App {
@@ -30,20 +32,21 @@ impl App {
         const WIN_HEIGHT: i32 = 300;
         let window = App::create_window(WIN_WIDTH, WIN_HEIGHT);
 
-        // Create a placeholder value to use for `sink` in App struct
+        // Create a placeholder value to use for `sink` and `_stream` in App struct
         let sink = Arc::new(Mutex::new(None));
+        let _stream = Arc::new(Mutex::new(None));
 
         const BTN_SIZE: i32 = 30;
         const BTN_X: i32 = (WIN_WIDTH - BTN_SIZE) / 2; // Center the button horizontally
         const BTN_Y: i32 = 200;
         let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y, &sink);
 
-
         App {
             app,
             window,
             play_button,
             sink,
+            _stream,
         }
     }
 
@@ -63,13 +66,17 @@ impl App {
     /// Play audio and set self.sink to an audio sink
     fn play_audio(&self) {
         let sink_ref = Arc::clone(&self.sink);
+        let stream_ref = Arc::clone(&self._stream);
 
         thread::spawn(move || {
             // Get an output stream handle to the default physical sound device.
             let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
                 .expect("open default audio stream");
 
-            // Load sound from file
+            // Create a new audio sink
+            let sink = rodio::Sink::connect_new(&stream_handle.mixer());
+
+            // Load sound file
             let file_path = "test.mp3";
             let file = match File::open(file_path) {
                 Ok(file) => BufReader::new(file),
@@ -79,20 +86,28 @@ impl App {
                 }
             };
 
-            // Play audio
-            let sink = match rodio::play(&stream_handle.mixer(), file) {
-                Ok(sink) => sink,
+            // Decode that sound file into a source
+            let source = match Decoder::try_from(file) {
+                Ok(source) => source,
                 Err(_) => {
-                    println!("Invalid file type.");
+                    println!("File format not supported. Exiting...");
                     exit(1);
                 }
             };
 
-            // Since audio plays in seperate thread, block current thread from terminating
-            sink.sleep_until_end();
+            // Play the sound directly on the device
+            sink.append(source);
 
-            let mut mutex_guard = sink_ref.lock().unwrap();
-            *mutex_guard = Some(sink);
+            // Add sink to self.sink
+            *sink_ref.lock().unwrap() = Some(sink);
+
+            // Add stream_handle to self._stream_handle
+            *stream_ref.lock().unwrap() = Some(stream_handle);
+
+            // Block thread until sink is empty (when audio is finished)
+            while !sink_ref.lock().unwrap().as_ref().unwrap().empty() {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
         });
     }
 
@@ -132,20 +147,18 @@ impl App {
         // Define a function to execute once the button is clicked
         btn.set_callback(move |btn| {
             // Get the audio sink
-            let sink = sink_ref.lock().unwrap();
+            let binding = sink_ref.lock().unwrap();
+            let sink = binding.as_ref().unwrap();
 
-            if let Some(sink) = &*sink {
-                // Play/pause audio on button click
-                match btn.label().as_str() {
-                    PLAY_BUTTON => {
-                        btn.set_label(PAUSE_BUTTON);
-                        sink.pause();
-                    }
-                    PAUSE_BUTTON => {
-                        btn.set_label(PLAY_BUTTON);
-                        sink.play();
-                    }
-                    _ => unreachable!(),
+            // Play/pause audio on button click
+            match sink.is_paused() {
+                true => {
+                    btn.set_label(PAUSE_BUTTON);
+                    sink.play();
+                }
+                false => {
+                    btn.set_label(PLAY_BUTTON);
+                    sink.pause();
                 }
             }
         });
