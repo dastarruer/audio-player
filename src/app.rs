@@ -81,6 +81,7 @@ impl AudioHandler {
         Arc::clone(&self.sink)
     }
 
+    /// Run a closure that extracts `sink` from `sink_ref` (which can be obtained using `get_sink_ref()`).
     fn with_sink<F, R>(sink_ref: &Arc<Mutex<Option<Sink>>>, f: F) -> R
     where
         F: FnOnce(&Sink) -> R,
@@ -117,7 +118,7 @@ impl App {
         let audio_handler = AudioHandler::new();
 
         // Create a new window
-        let window = App::create_window(Self::WIN_WIDTH, Self::WIN_HEIGHT);
+        let window = App::create_window();
 
         let mut app = App {
             app,
@@ -126,7 +127,7 @@ impl App {
             audio_handler,
         };
 
-        app.play_button = Some(app.create_play_button(Self::BTN_SIZE, Self::BTN_X, Self::BTN_Y));
+        app.play_button = Some(app.create_play_button());
 
         app
     }
@@ -145,16 +146,16 @@ impl App {
     }
 
     /// Create the window and theme it
-    fn create_window(width: i32, height: i32) -> window::DoubleWindow {
+    fn create_window() -> window::DoubleWindow {
         let mut win = window::Window::default()
-            .with_size(width, height)
+            .with_size(Self::WIN_WIDTH, Self::WIN_HEIGHT)
             .with_label("My window");
         win.set_color(Color::White);
         win
     }
 
     /// Create the play button and theme it
-    fn create_play_button(&self, size: i32, x: i32, y: i32) -> button::Button {
+    fn create_play_button(&self) -> button::Button {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
 
@@ -162,8 +163,8 @@ impl App {
         let sink_ref = self.audio_handler.get_sink_ref();
 
         let mut btn = button::Button::default()
-            .with_size(size, size)
-            .with_pos(x, y)
+            .with_size(Self::BTN_SIZE, Self::BTN_SIZE)
+            .with_pos(Self::BTN_X, Self::BTN_Y)
             .with_label(PAUSE_BUTTON);
 
         // Remove focus border around button
