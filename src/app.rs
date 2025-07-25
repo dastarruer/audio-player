@@ -14,6 +14,7 @@ struct AudioHandler {
     sink: Arc<Mutex<Option<Sink>>>,
 
     /// Audio stream
+    /// We store this here so that the audio lives as long as the app
     stream: Arc<Mutex<Option<OutputStream>>>,
 }
 
