@@ -108,9 +108,9 @@ impl App {
     const WIN_WIDTH: i32 = 400;
     const WIN_HEIGHT: i32 = 300;
 
-    const BTN_SIZE: i32 = 30;
-    const BTN_X: i32 = (Self::WIN_WIDTH - Self::BTN_SIZE) / 2; // Center the button horizontally
-    const BTN_Y: i32 = 200;
+    const PLAY_BTN_SIZE: i32 = 30;
+    const PLAY_BTN_X: i32 = (Self::WIN_WIDTH - Self::PLAY_BTN_SIZE) / 2; // Center the button horizontally
+    const PLAY_BTN_Y: i32 = 200;
 
     /// Create the new App
     pub fn new() -> App {
@@ -163,8 +163,8 @@ impl App {
         let sink_ref = self.audio_handler.get_sink_ref();
 
         let mut btn = button::Button::default()
-            .with_size(Self::BTN_SIZE, Self::BTN_SIZE)
-            .with_pos(Self::BTN_X, Self::BTN_Y)
+            .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
+            .with_pos(Self::PLAY_BTN_X, Self::PLAY_BTN_Y)
             .with_label(PAUSE_BUTTON);
 
         // Remove focus border around button
