@@ -1,3 +1,4 @@
+use fltk::button::Button;
 use fltk::{app, button, enums::Color, prelude::*, window};
 
 use rodio::Sink;
@@ -100,6 +101,9 @@ pub struct App {
     /// Button to play/pause audio
     play_button: Option<button::Button>,
 
+    /// Buttons to seek forwards and backwards
+    seek_buttons: Option<[button::Button; 2]>,
+
     /// An AudioHandler, which will handle audio related functions such as playing audio
     audio_handler: AudioHandler,
 }
@@ -124,10 +128,12 @@ impl App {
             app,
             window,
             play_button: None,
+            seek_buttons: None,
             audio_handler,
         };
 
         app.play_button = Some(app.create_play_button());
+        app.seek_buttons = Some(app.create_seek_buttons());
 
         app
     }
@@ -154,6 +160,16 @@ impl App {
         win
     }
 
+    fn style_button(mut btn: button::Button) -> button::Button {
+        // Remove focus border around button
+        btn.clear_visible_focus();
+
+        // Remove button background
+        btn.set_frame(fltk::enums::FrameType::NoBox);
+
+        btn
+    }
+
     /// Create the play button and theme it
     fn create_play_button(&self) -> button::Button {
         const PLAY_BUTTON: &str = "";
@@ -162,16 +178,12 @@ impl App {
         // Clone the reference to the sink
         let sink_ref = self.audio_handler.get_sink_ref();
 
-        let mut btn = button::Button::default()
-            .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
-            .with_pos(Self::PLAY_BTN_X, Self::PLAY_BTN_Y)
-            .with_label(PAUSE_BUTTON);
-
-        // Remove focus border around button
-        btn.clear_visible_focus();
-
-        // Remove button background
-        btn.set_frame(fltk::enums::FrameType::NoBox);
+        let mut btn = App::style_button(
+            button::Button::default()
+                .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
+                .with_pos(Self::PLAY_BTN_X, Self::PLAY_BTN_Y)
+                .with_label(PAUSE_BUTTON),
+        );
 
         // Define a function to execute once the button is clicked
         btn.set_callback(move |btn| {
@@ -189,5 +201,23 @@ impl App {
         });
 
         btn
+    }
+
+    /// Create the seek buttons to fast-forward and rewind
+    fn create_seek_buttons(&self) -> [button::Button; 2] {
+        let seek_forwards_btn = App::style_button(
+            button::Button::default()
+                .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
+                .with_pos(Self::PLAY_BTN_X + 100, Self::PLAY_BTN_Y)
+                .with_label("󰵱"),
+        );
+        let seek_backwards_btn = App::style_button(
+            button::Button::default()
+                .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
+                .with_pos(Self::PLAY_BTN_X - 100, Self::PLAY_BTN_Y)
+                .with_label("󰴪"),
+        );
+
+        [seek_backwards_btn, seek_forwards_btn]
     }
 }
