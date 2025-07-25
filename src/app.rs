@@ -90,19 +90,27 @@ pub struct App {
 }
 
 impl App {
+    const WIN_WIDTH: i32 = 400;
+    const WIN_HEIGHT: i32 = 300;
+
+    const BTN_SIZE: i32 = 30;
+    const BTN_X: i32 = (Self::WIN_WIDTH - Self::BTN_SIZE) / 2; // Center the button horizontally
+    const BTN_Y: i32 = 200;
+
     /// Create the new App
     pub fn new() -> App {
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
         let audio_handler = AudioHandler::new();
-        // Create a new window
-        const WIN_WIDTH: i32 = 400;
-        const WIN_HEIGHT: i32 = 300;
-        let window = App::create_window(WIN_WIDTH, WIN_HEIGHT);
 
-        const BTN_SIZE: i32 = 30;
-        const BTN_X: i32 = (WIN_WIDTH - BTN_SIZE) / 2; // Center the button horizontally
-        const BTN_Y: i32 = 200;
-        let play_button = App::create_play_button(BTN_SIZE, BTN_X, BTN_Y, &audio_handler.sink);
+        // Create a new window
+        let window = App::create_window(Self::WIN_WIDTH, Self::WIN_HEIGHT);
+
+        let play_button = App::create_play_button(
+            Self::BTN_SIZE,
+            Self::BTN_X,
+            Self::BTN_Y,
+            &audio_handler.sink,
+        );
 
         App {
             app,
