@@ -75,6 +75,11 @@ impl AudioHandler {
             }
         });
     }
+
+    /// Returns a clones reference for `self.sink`.
+    fn get_sink_ref(&self) -> Arc<Mutex<Option<Sink>>> {
+        Arc::clone(&self.sink)
+    }
 }
 
 /// Stores the components of the GUI
@@ -83,7 +88,7 @@ pub struct App {
     window: window::DoubleWindow,
 
     /// Button to play/pause audio
-    play_button: button::Button,
+    play_button: Option<button::Button>,
 
     /// An AudioHandler, which will handle audio related functions such as playing audio
     audio_handler: AudioHandler,
@@ -105,19 +110,20 @@ impl App {
         // Create a new window
         let window = App::create_window(Self::WIN_WIDTH, Self::WIN_HEIGHT);
 
-        let play_button = App::create_play_button(
+        let mut app = App {
+            app,
+            window,
+            play_button: None,
+            audio_handler,
+        };
+
+        app.play_button = Some(app.create_play_button(
             Self::BTN_SIZE,
             Self::BTN_X,
             Self::BTN_Y,
-            &audio_handler.sink,
-        );
+        ));
 
-        App {
-            app,
-            window,
-            play_button,
-            audio_handler,
-        }
+        app
     }
 
     /// Run the app
@@ -144,16 +150,16 @@ impl App {
 
     /// Create the play button and theme it
     fn create_play_button(
+        &self,
         size: i32,
         x: i32,
         y: i32,
-        sink: &Arc<Mutex<Option<Sink>>>,
     ) -> button::Button {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
 
         // Clone the reference to the sink
-        let sink_ref = Arc::clone(&sink);
+        let sink_ref = self.audio_handler.get_sink_ref();
 
         let mut btn = button::Button::default()
             .with_size(size, size)
