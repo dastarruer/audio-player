@@ -8,6 +8,7 @@ use std::io::BufReader;
 use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 /// Store the functionality for playing audio and other functions
 struct AudioHandler {
@@ -31,7 +32,7 @@ impl AudioHandler {
 
     /// Play audio and initialize self.sink and self.stream
     fn play_audio(&self) {
-        let sink_ref = Arc::clone(&self.sink);
+        let sink_ref = self.get_sink_ref();
         let stream_ref = Arc::clone(&self.stream);
 
         thread::spawn(move || {
@@ -47,7 +48,7 @@ impl AudioHandler {
             let file = match File::open(file_path) {
                 Ok(file) => BufReader::new(file),
                 Err(_) => {
-                    println!("File path does not exist. Exiting...");
+                    eprintln!("File path does not exist. Exiting...");
                     exit(1);
                 }
             };
@@ -56,7 +57,7 @@ impl AudioHandler {
             let source = match Decoder::try_from(file) {
                 Ok(source) => source,
                 Err(_) => {
-                    println!("File format not supported. Exiting...");
+                    eprintln!("File format not supported. Exiting...");
                     exit(1);
                 }
             };
@@ -205,18 +206,54 @@ impl App {
 
     /// Create the seek buttons to fast-forward and rewind
     fn create_seek_buttons(&self) -> [button::Button; 2] {
-        let seek_forwards_btn = App::style_button(
+        let mut seek_forwards_btn = App::style_button(
             button::Button::default()
                 .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
                 .with_pos(Self::PLAY_BTN_X + 100, Self::PLAY_BTN_Y)
                 .with_label("󰵱"),
         );
-        let seek_backwards_btn = App::style_button(
+
+        // Clone the reference to the sink
+        let sink_ref = self.audio_handler.get_sink_ref();
+
+        seek_forwards_btn.set_callback(move |_| {
+            AudioHandler::with_sink(&sink_ref, |sink| {
+                let current_pos = sink.get_pos();
+                match sink.try_seek(current_pos + Duration::from_secs(10)) {
+                    Ok(_) => (),
+                    Err(e) => eprintln!("Seek error: {:?}", e),
+                };
+            });
+        });
+
+        let mut seek_backwards_btn = App::style_button(
             button::Button::default()
                 .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
                 .with_pos(Self::PLAY_BTN_X - 100, Self::PLAY_BTN_Y)
                 .with_label("󰴪"),
         );
+
+        // Clone the reference to the sink again, since it was moved into seek_forwards_btn
+        let sink_ref = self.audio_handler.get_sink_ref();
+
+        seek_backwards_btn.set_callback(move |_| {
+            AudioHandler::with_sink(&sink_ref, |sink| {
+                let current_pos = sink.get_pos();
+
+                // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
+                if current_pos < Duration::from_secs(10) {
+                    match sink.try_seek(Duration::from_secs(0)) {
+                        Ok(_) => (),
+                        Err(e) => eprintln!("Seek error: {:?}", e),
+                    };
+                } else {
+                    match sink.try_seek(current_pos - Duration::from_secs(10)) {
+                        Ok(_) => (),
+                        Err(e) => eprintln!("Seek error: {:?}", e),
+                    };
+                }
+            });
+        });
 
         [seek_backwards_btn, seek_forwards_btn]
     }
