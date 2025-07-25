@@ -80,6 +80,15 @@ impl AudioHandler {
     fn get_sink_ref(&self) -> Arc<Mutex<Option<Sink>>> {
         Arc::clone(&self.sink)
     }
+
+    fn with_sink<F, R>(sink_ref: &Arc<Mutex<Option<Sink>>>, f: F) -> R
+    where
+        F: FnOnce(&Sink) -> R,
+    {
+        let guard = sink_ref.lock().unwrap();
+        let sink = guard.as_ref().expect("Sink not initialized");
+        f(sink)
+    }
 }
 
 /// Stores the components of the GUI
@@ -117,11 +126,7 @@ impl App {
             audio_handler,
         };
 
-        app.play_button = Some(app.create_play_button(
-            Self::BTN_SIZE,
-            Self::BTN_X,
-            Self::BTN_Y,
-        ));
+        app.play_button = Some(app.create_play_button(Self::BTN_SIZE, Self::BTN_X, Self::BTN_Y));
 
         app
     }
@@ -149,12 +154,7 @@ impl App {
     }
 
     /// Create the play button and theme it
-    fn create_play_button(
-        &self,
-        size: i32,
-        x: i32,
-        y: i32,
-    ) -> button::Button {
+    fn create_play_button(&self, size: i32, x: i32, y: i32) -> button::Button {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
 
@@ -174,12 +174,8 @@ impl App {
 
         // Define a function to execute once the button is clicked
         btn.set_callback(move |btn| {
-            // Get the audio sink
-            let binding = sink_ref.lock().unwrap();
-            let sink = binding.as_ref().unwrap();
-
-            // Play/pause audio on button click
-            match sink.is_paused() {
+            // Play/pause audio
+            AudioHandler::with_sink(&sink_ref, |sink| match sink.is_paused() {
                 true => {
                     btn.set_label(PAUSE_BUTTON);
                     sink.play();
@@ -188,7 +184,7 @@ impl App {
                     btn.set_label(PLAY_BUTTON);
                     sink.pause();
                 }
-            }
+            });
         });
 
         btn
