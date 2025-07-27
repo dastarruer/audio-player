@@ -39,7 +39,7 @@ impl AudioHandler {
 
     /// Play audio and initialize self.sink and self.stream
     fn play_audio(&self, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) {
-        let sink_ref = self.get_sink_ref();
+        let sink_ref = Arc::clone(&self.sink);
         let stream_ref = Arc::clone(&self.stream);
 
         thread::spawn(move || {
@@ -120,12 +120,7 @@ impl AudioHandler {
         }
     }
 
-    /// Returns a clones reference for `self.sink`.
-    fn get_sink_ref(&self) -> Arc<Mutex<Option<Sink>>> {
-        Arc::clone(&self.sink)
-    }
-
-    /// Run a closure that extracts `sink` from `sink_ref` (which can be obtained using `get_sink_ref()`).
+    /// Run a closure that extracts `sink` from `sink_ref`
     fn with_sink<F, R>(sink_ref: &Arc<Mutex<Option<Sink>>>, f: F) -> R
     where
         F: FnOnce(&Sink) -> R,
