@@ -157,11 +157,8 @@ pub struct App {
     app: app::App,
     window: window::DoubleWindow,
 
-    /// Button to play/pause audio.
-    play_button: Option<button::Button>,
-
-    /// Buttons to seek forwards and backwards.
-    seek_buttons: Option<[button::Button; 2]>,
+    /// Buttons to control playback. These are the pause, rewind, and fast-forward buttons.
+    playback_buttons: Option<[button::Button; 3]>,
 
     /// An AudioHandler, which will handle audio related functions such as playing audio.
     audio_handler: AudioHandler,
@@ -188,8 +185,7 @@ impl App {
         App {
             app,
             window,
-            play_button: None,
-            seek_buttons: None,
+            playback_buttons: None,
             audio_handler,
         }
     }
@@ -214,10 +210,9 @@ impl App {
         self.app.run().unwrap();
     }
 
-    /// Create all the necessary app components, such as the pause button, fast-forward and rewind buttons, etc.
+    /// Create all the necessary app components, such as the playback buttons, etc.
     fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
-        self.play_button = Some(self.create_play_button(sender.clone()));
-        self.seek_buttons = Some(self.create_seek_buttons(sender.clone()));
+        self.playback_buttons = Some(self.create_playback_buttons(sender.clone()));
     }
 
     /// Create the window and theme it.
@@ -280,12 +275,13 @@ impl App {
         btn
     }
 
-    /// Create the seek buttons to fast-forward and rewind.
-    fn create_seek_buttons(&self, sender: mpsc::Sender<Message>) -> [button::Button; 2] {
+    /// Create playback buttons to pause, rewind, and fast-forward.
+    fn create_playback_buttons(&self, sender: mpsc::Sender<Message>) -> [button::Button; 3] {
         let seek_forwards_btn = self.create_fast_forward_button(sender.clone());
         let seek_backwards_btn = self.create_rewind_button(sender.clone());
+        let play_btn = self.create_play_button(sender.clone());
 
-        [seek_backwards_btn, seek_forwards_btn]
+        [seek_backwards_btn, seek_forwards_btn, play_btn]
     }
 
     /// Create the fast-forwards button.
