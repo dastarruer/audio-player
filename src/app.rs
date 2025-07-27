@@ -275,7 +275,7 @@ impl App {
         btn
     }
 
-    /// Create playback buttons to pause, rewind, and fast-forward.
+    /// Create playback buttons to rewind,, fast-forward and play/pause.
     fn create_playback_buttons(&self, sender: mpsc::Sender<Message>) -> [button::Button; 3] {
         let seek_forwards_btn = self.create_fast_forward_button(sender.clone());
         let seek_backwards_btn = self.create_rewind_button(sender.clone());
