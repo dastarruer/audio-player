@@ -80,40 +80,44 @@ impl AudioHandler {
 
             loop {
                 let message = receiver.lock().unwrap().recv().unwrap();
-
-                match message {
-                    Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
-                        sink.play();
-                    }),
-                    Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
-                        sink.pause();
-                    }),
-                    Message::FastForward(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
-                        let current_pos = sink.get_pos();
-                        match sink.try_seek(current_pos + duration) {
-                            Ok(_) => (),
-                            Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
-                        };
-                    }),
-                    Message::Rewind(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
-                        let current_pos = sink.get_pos();
-
-                        // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
-                        if current_pos < duration {
-                            match sink.try_seek(Duration::from_secs(0)) {
-                                Ok(_) => (),
-                                Err(e) => eprintln!("Unable to rewind: {:?}", e),
-                            };
-                        } else {
-                            match sink.try_seek(current_pos - duration) {
-                                Ok(_) => (),
-                                Err(e) => eprintln!("Unable to rewind: {:?}", e),
-                            };
-                        }
-                    }),
-                }
+                AudioHandler::handle_messages(message, &sink_ref);
             }
         });
+    }
+
+    /// A function that handles messages sent to the audio thread
+    fn handle_messages(message: Message, sink_ref: &Arc<Mutex<Option<Sink>>>) {
+        match message {
+            Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
+                sink.play();
+            }),
+            Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
+                sink.pause();
+            }),
+            Message::FastForward(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
+                let current_pos = sink.get_pos();
+                match sink.try_seek(current_pos + duration) {
+                    Ok(_) => (),
+                    Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
+                };
+            }),
+            Message::Rewind(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
+                let current_pos = sink.get_pos();
+
+                // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
+                if current_pos < duration {
+                    match sink.try_seek(Duration::from_secs(0)) {
+                        Ok(_) => (),
+                        Err(e) => eprintln!("Unable to rewind: {:?}", e),
+                    };
+                } else {
+                    match sink.try_seek(current_pos - duration) {
+                        Ok(_) => (),
+                        Err(e) => eprintln!("Unable to rewind: {:?}", e),
+                    };
+                }
+            }),
+        }
     }
 
     /// Returns a clones reference for `self.sink`.
