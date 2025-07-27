@@ -13,6 +13,8 @@ use std::time::Duration;
 enum Message {
     Play,
     Pause,
+    FastForward(Duration),
+    Rewind(Duration),
 }
 
 /// Store the functionality for playing audio and other functions
@@ -86,6 +88,29 @@ impl AudioHandler {
                     Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
                         sink.pause();
                     }),
+                    Message::FastForward(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
+                        let current_pos = sink.get_pos();
+                        match sink.try_seek(current_pos + duration) {
+                            Ok(_) => (),
+                            Err(e) => eprintln!("Seek error: {:?}", e),
+                        };
+                    }),
+                    Message::Rewind(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
+                        let current_pos = sink.get_pos();
+
+                        // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
+                        if current_pos < duration {
+                            match sink.try_seek(Duration::from_secs(0)) {
+                                Ok(_) => (),
+                                Err(e) => eprintln!("Seek error: {:?}", e),
+                            };
+                        } else {
+                            match sink.try_seek(current_pos - duration) {
+                                Ok(_) => (),
+                                Err(e) => eprintln!("Seek error: {:?}", e),
+                            };
+                        }
+                    }),
                 }
             }
         });
@@ -130,6 +155,8 @@ impl App {
     const PLAY_BTN_X: i32 = (Self::WIN_WIDTH - Self::PLAY_BTN_SIZE) / 2; // Center the button horizontally
     const PLAY_BTN_Y: i32 = 200;
 
+    const SEEK_DURATION_SECS: u64 = 5;
+
     /// Create the new App
     pub fn new() -> App {
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
@@ -169,8 +196,8 @@ impl App {
 
     /// Create all the necessary app components, such as the pause button, fast-forward and rewind buttons, etc.
     fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
-        self.play_button = Some(self.create_play_button(sender));
-        self.seek_buttons = Some(self.create_seek_buttons());
+        self.play_button = Some(self.create_play_button(sender.clone()));
+        self.seek_buttons = Some(self.create_seek_buttons(sender.clone()));
     }
 
     /// Create the window and theme it
@@ -234,7 +261,15 @@ impl App {
     }
 
     /// Create the seek buttons to fast-forward and rewind
-    fn create_seek_buttons(&self) -> [button::Button; 2] {
+    fn create_seek_buttons(&self, sender: mpsc::Sender<Message>) -> [button::Button; 2] {
+        let seek_forwards_btn = self.create_fast_forward_button(sender.clone());
+        let seek_backwards_btn = self.create_rewind_button(sender.clone());
+
+        [seek_backwards_btn, seek_forwards_btn]
+    }
+
+    /// Create the fast-forwards button
+    fn create_fast_forward_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
         let mut seek_forwards_btn = App::style_button(
             button::Button::default()
                 .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
@@ -242,19 +277,21 @@ impl App {
                 .with_label("󰵱"),
         );
 
-        // Clone the reference to the sink
-        let sink_ref = self.audio_handler.get_sink_ref();
-
         seek_forwards_btn.set_callback(move |_| {
-            AudioHandler::with_sink(&sink_ref, |sink| {
-                let current_pos = sink.get_pos();
-                match sink.try_seek(current_pos + Duration::from_secs(10)) {
-                    Ok(_) => (),
-                    Err(e) => eprintln!("Seek error: {:?}", e),
-                };
-            });
+            // Send a fast-forward message to the audio thread
+            match sender.send(Message::FastForward(Duration::from_secs(
+                Self::SEEK_DURATION_SECS,
+            ))) {
+                Ok(_) => (),
+                Err(e) => println!("Unable to fast-forward: {:?}", e),
+            }
         });
 
+        seek_forwards_btn
+    }
+
+    /// Create the rewind button
+    fn create_rewind_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
         let mut seek_backwards_btn = App::style_button(
             button::Button::default()
                 .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
@@ -262,28 +299,16 @@ impl App {
                 .with_label("󰴪"),
         );
 
-        // Clone the reference to the sink again, since it was moved into seek_forwards_btn
-        let sink_ref = self.audio_handler.get_sink_ref();
-
         seek_backwards_btn.set_callback(move |_| {
-            AudioHandler::with_sink(&sink_ref, |sink| {
-                let current_pos = sink.get_pos();
-
-                // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
-                if current_pos < Duration::from_secs(10) {
-                    match sink.try_seek(Duration::from_secs(0)) {
-                        Ok(_) => (),
-                        Err(e) => eprintln!("Seek error: {:?}", e),
-                    };
-                } else {
-                    match sink.try_seek(current_pos - Duration::from_secs(10)) {
-                        Ok(_) => (),
-                        Err(e) => eprintln!("Seek error: {:?}", e),
-                    };
-                }
-            });
+            // Send a rewind message to the audio thread
+            match sender.send(Message::Rewind(Duration::from_secs(
+                Self::SEEK_DURATION_SECS,
+            ))) {
+                Ok(_) => (),
+                Err(e) => println!("Unable to rewind: {:?}", e),
+            }
         });
 
-        [seek_backwards_btn, seek_forwards_btn]
+        seek_backwards_btn
     }
 }
