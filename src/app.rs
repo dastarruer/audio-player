@@ -53,15 +53,33 @@ impl AudioHandler {
             // Load sound file
             let file_path = "test.mp3";
             let file = match File::open(file_path) {
-                Ok(file) => BufReader::new(file),
+                Ok(file) => file,
                 Err(_) => {
                     eprintln!("File path does not exist. Exiting...");
                     exit(1);
                 }
             };
 
+            // Get the byte length of the file
+            let byte_len = match file.metadata() {
+                Ok(metadata) => metadata.len(),
+                Err(_) => {
+                    eprintln!("Unable to determine file byte length. Exiting...");
+                    exit(1);
+                }
+            };
+
+            let file = BufReader::new(file);
+
             // Decode that sound file into a source
-            let source = match Decoder::try_from(file) {
+            let source = match Decoder::builder()
+                .with_data(file)
+                // Specify the length of the audio source for reliable seeking
+                .with_byte_len(byte_len)
+                // Essential to allow for seeking backwards
+                .with_seekable(true)
+                .build()
+            {
                 Ok(source) => source,
                 Err(_) => {
                     eprintln!("File format not supported. Exiting...");
