@@ -1,14 +1,20 @@
-use fltk::button::Button;
 use fltk::{app, button, enums::Color, prelude::*, window};
 
 use rodio::Sink;
-use rodio::{Decoder, OutputStream, source::Source};
+use rodio::{Decoder, OutputStream};
 use std::fs::File;
 use std::io::BufReader;
 use std::process::exit;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use std::time::Duration;
+
+/// A message to be sent to the thread that plays audio
+enum Message {
+    Play,
+    Pause,
+    Terminate,
+}
 
 /// Store the functionality for playing audio and other functions
 struct AudioHandler {
@@ -31,7 +37,7 @@ impl AudioHandler {
     }
 
     /// Play audio and initialize self.sink and self.stream
-    fn play_audio(&self) {
+    fn play_audio(&self, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) {
         let sink_ref = self.get_sink_ref();
         let stream_ref = Arc::clone(&self.stream);
 
@@ -71,10 +77,20 @@ impl AudioHandler {
             // Add stream_handle to self.stream_handle
             *stream_ref.lock().unwrap() = Some(stream_handle);
 
-            // Block thread until sink is empty (when audio is finished)
-            // TODO: Convert this into a message enum
-            while !sink_ref.lock().unwrap().as_ref().unwrap().empty() {
-                std::thread::sleep(std::time::Duration::from_millis(100));
+            loop {
+                let message = receiver.lock().unwrap().recv().unwrap();
+
+                match message {
+                    Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
+                        sink.play();
+                    }),
+                    Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
+                        sink.pause();
+                    }),
+                    Message::Terminate => {
+                        break;
+                    }
+                }
             }
         });
     }
@@ -134,23 +150,33 @@ impl App {
             audio_handler,
         };
 
-        app.play_button = Some(app.create_play_button());
-        app.seek_buttons = Some(app.create_seek_buttons());
-
         app
     }
 
     /// Run the app
     pub fn run(&mut self) {
+        // Create a channel to send messages to the audio thread
+        let (sender, recevier) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(recevier));
+
+        // Create the components
+        self.create_app_components(sender);
+
         // Show the window
         self.window.end();
         self.window.show();
 
         // Play the audio
-        self.audio_handler.play_audio();
+        self.audio_handler.play_audio(Arc::clone(&receiver));
 
         // Run the app
         self.app.run().unwrap();
+    }
+
+    /// Create all the necessary app components, such as the pause button, fast-forward and rewind buttons, etc.
+    fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
+        self.play_button = Some(self.create_play_button(sender));
+        self.seek_buttons = Some(self.create_seek_buttons());
     }
 
     /// Create the window and theme it
@@ -173,12 +199,9 @@ impl App {
     }
 
     /// Create the play button and theme it
-    fn create_play_button(&self) -> button::Button {
+    fn create_play_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
-
-        // Clone the reference to the sink
-        let sink_ref = self.audio_handler.get_sink_ref();
 
         let mut btn = App::style_button(
             button::Button::default()
@@ -190,16 +213,27 @@ impl App {
         // Define a function to execute once the button is clicked
         btn.set_callback(move |btn| {
             // Play/pause audio
-            AudioHandler::with_sink(&sink_ref, |sink| match sink.is_paused() {
-                true => {
-                    btn.set_label(PAUSE_BUTTON);
-                    sink.play();
-                }
-                false => {
+            match btn.label().as_str() {
+                PAUSE_BUTTON => {
                     btn.set_label(PLAY_BUTTON);
-                    sink.pause();
+
+                    // Send a message to the audio thread to pause the audio
+                    match sender.send(Message::Pause) {
+                        Ok(_) => (),
+                        Err(e) => println!("Unable to play audio: {:?}", e),
+                    };
                 }
-            });
+                PLAY_BUTTON => {
+                    btn.set_label(PAUSE_BUTTON);
+
+                    // Send a message to the audio thread to play the audio
+                    match sender.send(Message::Play) {
+                        Ok(_) => (),
+                        Err(e) => println!("Unable to play audio: {:?}", e),
+                    };
+                }
+                _ => unreachable!(),
+            };
         });
 
         btn
