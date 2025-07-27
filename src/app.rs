@@ -17,18 +17,17 @@ enum Message {
     Rewind(Duration),
 }
 
-/// Store the functionality for playing audio and other functions
+/// Store the functionality for playing audio and other functions.
 struct AudioHandler {
     /// Audio sink to control playback
     sink: Arc<Mutex<Option<Sink>>>,
 
-    /// Audio stream
-    /// We store this here so that the audio lives as long as the app
+    /// The audio that is playing
     stream: Arc<Mutex<Option<OutputStream>>>,
 }
 
 impl AudioHandler {
-    /// Return an empty instance of AudioPlayer
+    /// Return an empty instance of AudioPlayer.
     fn new() -> AudioHandler {
         // Use None for now; this will become populated in self.play_audio
         let sink = Arc::new(Mutex::new(None));
@@ -37,7 +36,7 @@ impl AudioHandler {
         AudioHandler { sink, stream }
     }
 
-    /// Play audio and initialize self.sink and self.stream
+    /// Play audio and initialize self.sink and self.stream.
     fn play_audio(&self, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) {
         let sink_ref = Arc::clone(&self.sink);
         let stream_ref = Arc::clone(&self.stream);
@@ -47,7 +46,7 @@ impl AudioHandler {
             let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
                 .expect("open default audio stream");
 
-            // Create a new audio sink
+            // Create a new audio sink, which will be used to control playback of audio
             let sink = rodio::Sink::connect_new(&stream_handle.mixer());
 
             // Load sound file
@@ -69,6 +68,7 @@ impl AudioHandler {
                 }
             };
 
+            // I have no idea what this does
             let file = BufReader::new(file);
 
             // Decode that sound file into a source
@@ -90,12 +90,13 @@ impl AudioHandler {
             // Play the sound directly on the device
             sink.append(source);
 
-            // Add sink to self.sink
+            // Add sink to self.sink so that it outlives the current thread
             *sink_ref.lock().unwrap() = Some(sink);
 
-            // Add stream_handle to self.stream_handle
+            // Add stream_handle to self.stream_handle so that it outlives the current thread and keeps playing audio
             *stream_ref.lock().unwrap() = Some(stream_handle);
 
+            // Continuously scan for new messages sent by the App
             loop {
                 let message = receiver.lock().unwrap().recv().unwrap();
                 AudioHandler::handle_messages(message, &sink_ref);
@@ -103,71 +104,66 @@ impl AudioHandler {
         });
     }
 
-    /// A function that handles messages sent to the audio thread
+    /// A function that handles messages sent to the audio thread.
     fn handle_messages(message: Message, sink_ref: &Arc<Mutex<Option<Sink>>>) {
         match message {
-            // If Play message is received, play the audio
             Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
                 sink.play();
             }),
-
-            // If Pause message is received, pause the audio
             Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
                 sink.pause();
             }),
-
-            // If FastForward message is received, fast forward by `duration_secs`
             Message::FastForward(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
                 let current_pos = sink.get_pos();
-                match sink.try_seek(current_pos + duration_secs) {
+                let target_pos = current_pos + duration_secs;
+
+                match sink.try_seek(target_pos) {
                     Ok(_) => (),
                     Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
                 };
             }),
-
-            // If Rewind message is received, rewind by `duration_secs`
             Message::Rewind(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
                 let current_pos = sink.get_pos();
 
-                // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
-                if current_pos < duration_secs {
-                    match sink.try_seek(Duration::from_secs(0)) {
-                        Ok(_) => (),
-                        Err(e) => eprintln!("Unable to rewind: {:?}", e),
-                    };
-                } else {
-                    match sink.try_seek(current_pos - duration_secs) {
-                        Ok(_) => (),
-                        Err(e) => eprintln!("Unable to rewind: {:?}", e),
-                    };
-                }
+                // Subtract `duration_secs` from `current_pos`, and if result is negative, default to Duration::ZERO
+                let target_pos = current_pos
+                    .checked_sub(duration_secs)
+                    .unwrap_or(Duration::ZERO);
+
+                // Seek to the target position
+                match sink.try_seek(target_pos) {
+                    Ok(_) => (),
+                    Err(e) => eprintln!("Unable to rewind: {:?}", e),
+                };
             }),
         }
     }
 
-    /// Run a closure that extracts `sink` from `sink_ref`
+    /// Run a closure that operates on `sink` for audio playback control by extracting `sink` from `sink_ref`.
     fn with_sink<F, R>(sink_ref: &Arc<Mutex<Option<Sink>>>, f: F) -> R
     where
         F: FnOnce(&Sink) -> R,
     {
         let guard = sink_ref.lock().unwrap();
         let sink = guard.as_ref().expect("Sink not initialized");
+
+        // Run the passed closure, passing `sink` as an argument
         f(sink)
     }
 }
 
-/// Stores the components of the GUI
+/// Stores the components of the GUI.
 pub struct App {
     app: app::App,
     window: window::DoubleWindow,
 
-    /// Button to play/pause audio
+    /// Button to play/pause audio.
     play_button: Option<button::Button>,
 
-    /// Buttons to seek forwards and backwards
+    /// Buttons to seek forwards and backwards.
     seek_buttons: Option<[button::Button; 2]>,
 
-    /// An AudioHandler, which will handle audio related functions such as playing audio
+    /// An AudioHandler, which will handle audio related functions such as playing audio.
     audio_handler: AudioHandler,
 }
 
@@ -181,7 +177,7 @@ impl App {
 
     const SEEK_DURATION_SECS: u64 = 5;
 
-    /// Create the new App
+    /// Create the new App.
     pub fn new() -> App {
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
         let audio_handler = AudioHandler::new();
@@ -198,7 +194,7 @@ impl App {
         }
     }
 
-    /// Run the app
+    /// Run the app.
     pub fn run(&mut self) {
         // Create a channel to send messages to the audio thread
         let (sender, recevier) = mpsc::channel();
@@ -224,7 +220,7 @@ impl App {
         self.seek_buttons = Some(self.create_seek_buttons(sender.clone()));
     }
 
-    /// Create the window and theme it
+    /// Create the window and theme it.
     fn create_window() -> window::DoubleWindow {
         let mut win = window::Window::default()
             .with_size(Self::WIN_WIDTH, Self::WIN_HEIGHT)
@@ -243,7 +239,7 @@ impl App {
         btn
     }
 
-    /// Create the play button and theme it
+    /// Create the play button and theme it.
     fn create_play_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
@@ -284,7 +280,7 @@ impl App {
         btn
     }
 
-    /// Create the seek buttons to fast-forward and rewind
+    /// Create the seek buttons to fast-forward and rewind.
     fn create_seek_buttons(&self, sender: mpsc::Sender<Message>) -> [button::Button; 2] {
         let seek_forwards_btn = self.create_fast_forward_button(sender.clone());
         let seek_backwards_btn = self.create_rewind_button(sender.clone());
@@ -292,7 +288,7 @@ impl App {
         [seek_backwards_btn, seek_forwards_btn]
     }
 
-    /// Create the fast-forwards button
+    /// Create the fast-forwards button.
     fn create_fast_forward_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
         let mut seek_forwards_btn = App::style_button(
             button::Button::default()
@@ -314,7 +310,7 @@ impl App {
         seek_forwards_btn
     }
 
-    /// Create the rewind button
+    /// Create the rewind button.
     fn create_rewind_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
         let mut seek_backwards_btn = App::style_button(
             button::Button::default()
