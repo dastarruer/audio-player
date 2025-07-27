@@ -92,7 +92,7 @@ impl AudioHandler {
                         let current_pos = sink.get_pos();
                         match sink.try_seek(current_pos + duration) {
                             Ok(_) => (),
-                            Err(e) => eprintln!("Seek error: {:?}", e),
+                            Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
                         };
                     }),
                     Message::Rewind(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
@@ -102,12 +102,12 @@ impl AudioHandler {
                         if current_pos < duration {
                             match sink.try_seek(Duration::from_secs(0)) {
                                 Ok(_) => (),
-                                Err(e) => eprintln!("Seek error: {:?}", e),
+                                Err(e) => eprintln!("Unable to rewind: {:?}", e),
                             };
                         } else {
                             match sink.try_seek(current_pos - duration) {
                                 Ok(_) => (),
-                                Err(e) => eprintln!("Seek error: {:?}", e),
+                                Err(e) => eprintln!("Unable to rewind: {:?}", e),
                             };
                         }
                     }),
