@@ -13,7 +13,6 @@ use std::time::Duration;
 enum Message {
     Play,
     Pause,
-    Terminate,
 }
 
 /// Store the functionality for playing audio and other functions
@@ -87,9 +86,6 @@ impl AudioHandler {
                     Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
                         sink.pause();
                     }),
-                    Message::Terminate => {
-                        break;
-                    }
                 }
             }
         });
