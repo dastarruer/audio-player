@@ -138,15 +138,13 @@ impl App {
         // Create a new window
         let window = App::create_window();
 
-        let mut app = App {
+        App {
             app,
             window,
             play_button: None,
             seek_buttons: None,
             audio_handler,
-        };
-
-        app
+        }
     }
 
     /// Run the app
