@@ -68,10 +68,11 @@ impl AudioHandler {
             // Add sink to self.sink
             *sink_ref.lock().unwrap() = Some(sink);
 
-            // Add stream_handle to self._stream_handle
+            // Add stream_handle to self.stream_handle
             *stream_ref.lock().unwrap() = Some(stream_handle);
 
             // Block thread until sink is empty (when audio is finished)
+            // TODO: Convert this into a message enum
             while !sink_ref.lock().unwrap().as_ref().unwrap().empty() {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
