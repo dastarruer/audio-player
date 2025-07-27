@@ -88,30 +88,37 @@ impl AudioHandler {
     /// A function that handles messages sent to the audio thread
     fn handle_messages(message: Message, sink_ref: &Arc<Mutex<Option<Sink>>>) {
         match message {
+            // If Play message is received, play the audio
             Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
                 sink.play();
             }),
+
+            // If Pause message is received, pause the audio
             Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
                 sink.pause();
             }),
-            Message::FastForward(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
+
+            // If FastForward message is received, fast forward by `duration_secs`
+            Message::FastForward(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
                 let current_pos = sink.get_pos();
-                match sink.try_seek(current_pos + duration) {
+                match sink.try_seek(current_pos + duration_secs) {
                     Ok(_) => (),
                     Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
                 };
             }),
-            Message::Rewind(duration) => AudioHandler::with_sink(&sink_ref, |sink| {
+
+            // If Rewind message is received, rewind by `duration_secs`
+            Message::Rewind(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
                 let current_pos = sink.get_pos();
 
                 // Ensure that current_pos is not smaller than 10, which would panic if current_pos - Duration::from_secs(10) were to be called
-                if current_pos < duration {
+                if current_pos < duration_secs {
                     match sink.try_seek(Duration::from_secs(0)) {
                         Ok(_) => (),
                         Err(e) => eprintln!("Unable to rewind: {:?}", e),
                     };
                 } else {
-                    match sink.try_seek(current_pos - duration) {
+                    match sink.try_seek(current_pos - duration_secs) {
                         Ok(_) => (),
                         Err(e) => eprintln!("Unable to rewind: {:?}", e),
                     };
