@@ -11,7 +11,7 @@ impl ProgressBar {
         const WIDTH: i32 = 250;
         const PROGRESS_BAR_Y: i32 = 195;
 
-        let progress_bar_x = (win_width - WIDTH) / 2; // Center the button horizontally
+        let progress_bar_x = (win_width - WIDTH) / 2; // Center the progress bar horizontally
 
         let mut _progress_bar = Progress::default()
             .with_pos(progress_bar_x, PROGRESS_BAR_Y)
