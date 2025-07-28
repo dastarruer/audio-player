@@ -157,7 +157,7 @@ impl AudioHandler {
 }
 
 /// Stores the components of the GUI.
-pub struct App {
+pub struct AudioApp {
     app: app::App,
     window: window::DoubleWindow,
 
@@ -168,19 +168,19 @@ pub struct App {
     audio_handler: AudioHandler,
 }
 
-impl App {
+impl AudioApp {
     const WIN_WIDTH: i32 = 400;
     const WIN_HEIGHT: i32 = 300;
 
     /// Create the new App.
-    pub fn new() -> App {
+    pub fn new() -> AudioApp {
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
         let audio_handler = AudioHandler::new();
 
         // Create a new window
-        let window = App::create_window();
+        let window = AudioApp::create_window();
 
-        App {
+        AudioApp {
             app,
             window,
             playback_buttons: None,
@@ -210,13 +210,13 @@ impl App {
 
     /// Create all the necessary app components, such as the playback buttons, etc.
     fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
-        self.playback_buttons = Some(PlaybackButtons::new(App::WIN_WIDTH, sender));
+        self.playback_buttons = Some(PlaybackButtons::new(AudioApp::WIN_WIDTH, sender));
     }
 
     /// Create the window and theme it.
     fn create_window() -> window::DoubleWindow {
         let mut win = window::Window::default()
-            .with_size(App::WIN_WIDTH, App::WIN_HEIGHT)
+            .with_size(AudioApp::WIN_WIDTH, AudioApp::WIN_HEIGHT)
             .with_label("My window");
         win.set_color(Color::White);
         win
