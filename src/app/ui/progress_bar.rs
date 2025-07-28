@@ -27,11 +27,12 @@ impl ProgressBar {
         ProgressBar { _progress_bar, audio_pos_receiver }
     }
 
-    /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position
-    pub fn run(&self) {
-        thread::spawn(|| {
-            loop {
-                println!("i am progressing as we speak...");
+    /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position.
+    /// Note that this method consumes self.
+    pub fn run(self) {
+        thread::spawn(move || {
+            for pos in self.audio_pos_receiver {
+                println!("Current position: {:?}", pos);
             };
         });
     }

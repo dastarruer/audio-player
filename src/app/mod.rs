@@ -77,7 +77,8 @@ impl AudioApp {
             .play_audio(Arc::clone(&receiver), audio_pos_sender);
 
         // Start the progress bar
-        self.progress_bar.as_ref().unwrap().run();
+        // .take() will take out the progress bar from Option, meaning after this `progress_bar` is now `None`, and its original value has been consumed by `run`
+        self.progress_bar.take().unwrap().run();
 
         // Run the app
         self.app.run().unwrap();

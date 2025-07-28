@@ -30,7 +30,11 @@ impl AudioHandler {
     }
 
     /// Play audio and initialize self.sink and self.stream.
-    pub(crate) fn play_audio(&self, receiver: Arc<Mutex<mpsc::Receiver<Message>>>, audio_pos_sender: mpsc::Sender<Duration>) {
+    pub(crate) fn play_audio(
+        &self,
+        receiver: Arc<Mutex<mpsc::Receiver<Message>>>,
+        audio_pos_sender: mpsc::Sender<Duration>,
+    ) {
         let sink_ref = Arc::clone(&self.sink);
         let stream_ref = Arc::clone(&self.stream);
 
@@ -88,6 +92,20 @@ impl AudioHandler {
 
             // Add stream_handle to self.stream_handle so that it outlives the current thread and keeps playing audio
             *stream_ref.lock().unwrap() = Some(stream_handle);
+
+            // Create a new thread to send the audio's current position to the progress bar
+            let new_sink_ref = Arc::clone(&sink_ref);
+            thread::spawn(move || {
+                loop {
+                    let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| sink.get_pos());
+
+                    // Send the current position to the progress bar
+                    match audio_pos_sender.send(current_pos) {
+                        Ok(_) => (),
+                        Err(_) => break, // Break the loop because if audio_pos_sender.send returns an error, it means the receiving end does not exist anymore
+                    };
+                }
+            });
 
             // Continuously scan for new messages sent by the App
             loop {
