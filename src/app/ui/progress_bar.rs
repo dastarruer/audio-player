@@ -1,4 +1,4 @@
-use std::{sync::mpsc, time::Duration};
+use std::{sync::mpsc, thread, time::Duration};
 
 use fltk::{misc::Progress, prelude::WidgetExt};
 
@@ -27,8 +27,12 @@ impl ProgressBar {
         ProgressBar { _progress_bar, audio_pos_receiver }
     }
 
-    /// Run the progress bar. This will initiate the progress updating logic based on the audio's current position
+    /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position
     pub fn run(&self) {
-        println!("i am progressing as we speak...");
+        thread::spawn(|| {
+            loop {
+                println!("i am progressing as we speak...");
+            };
+        });
     }
 }
