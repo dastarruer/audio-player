@@ -6,9 +6,9 @@ use crate::app::Message;
 
 /// A struct to store the playback buttons: the play, fast-forward, and rewind buttons.
 pub struct PlaybackButtons {
-    play_button: button::Button,
-    fast_forward_button: button::Button,
-    rewind_button: button::Button,
+    _play_button: button::Button,
+    _fast_forward_button: button::Button,
+    _rewind_button: button::Button,
 }
 
 impl PlaybackButtons {
@@ -36,9 +36,9 @@ impl PlaybackButtons {
             PlaybackButtons::create_rewind_button(BTN_SIZE, rewind_btn_x, BTN_Y, sender);
 
         PlaybackButtons {
-            play_button,
-            fast_forward_button,
-            rewind_button,
+            _play_button: play_button,
+            _fast_forward_button: fast_forward_button,
+            _rewind_button: rewind_button,
         }
     }
 
