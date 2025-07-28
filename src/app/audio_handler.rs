@@ -64,24 +64,32 @@ impl AudioHandler {
             // Add stream_handle to self.stream_handle so that it outlives the current thread and keeps playing audio
             *stream_ref.lock().unwrap() = Some(stream_handle);
 
-            // Create a new thread to send the audio's current position to the progress bar
+            // Send the audio's current position to the progress bar
             let new_sink_ref = Arc::clone(&sink_ref);
-            thread::spawn(move || {
-                loop {
-                    let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| sink.get_pos());
+            AudioHandler::send_audio_pos(audio_pos_sender, new_sink_ref);
 
-                    // Send the current position to the progress bar
-                    match audio_pos_sender.send(current_pos) {
-                        Ok(_) => (),
-                        Err(_) => break, // Break the loop because if audio_pos_sender.send returns an error, it means the receiving end does not exist anymore
-                    };
-                }
-            });
-
-            // Continuously scan for new messages sent by the App
+            // Continuously scan for new messages sent by the AudioApp
             loop {
                 let message = receiver.lock().unwrap().recv().unwrap();
                 AudioHandler::handle_messages(message, &sink_ref);
+            }
+        });
+    }
+
+    /// Create a new thread to send the audio's current position to the progress bar
+    fn send_audio_pos(
+        audio_pos_sender: mpsc::Sender<Duration>,
+        new_sink_ref: Arc<Mutex<Option<Sink>>>,
+    ) {
+        thread::spawn(move || {
+            loop {
+                let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| sink.get_pos());
+
+                // Send the current position to the progress bar
+                match audio_pos_sender.send(current_pos) {
+                    Ok(_) => (),
+                    Err(_) => break, // Break the loop because if audio_pos_sender.send returns an error, it means the receiving end does not exist anymore
+                };
             }
         });
     }
