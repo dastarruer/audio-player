@@ -1,7 +1,7 @@
 mod app;
-use app::App;
+use app::AudioApp;
 
 fn main() {
-    let mut app = App::new();
+    let mut app = AudioApp::new();
     app.run();
 }
