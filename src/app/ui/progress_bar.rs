@@ -1,13 +1,18 @@
+use std::{sync::mpsc, time::Duration};
+
 use fltk::{misc::Progress, prelude::WidgetExt};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
 pub struct ProgressBar {
     _progress_bar: Progress,
+
+    /// The receiver that will receive the audio's current position, and update accordingly
+    audio_pos_receiver: mpsc::Receiver<Duration>,
 }
 
 impl ProgressBar {
-    pub fn new(win_width: i32) -> ProgressBar {
+    pub fn new(win_width: i32, audio_pos_receiver: mpsc::Receiver<Duration>) -> ProgressBar {
         const WIDTH: i32 = 250;
         const PROGRESS_BAR_Y: i32 = 195;
 
@@ -19,6 +24,11 @@ impl ProgressBar {
 
         _progress_bar.set_value(15.0);
 
-        ProgressBar { _progress_bar }
+        ProgressBar { _progress_bar, audio_pos_receiver }
+    }
+
+    /// Run the progress bar. This will initiate the progress updating logic based on the audio's current position
+    pub fn run(&self) {
+        println!("i am progressing as we speak...");
     }
 }

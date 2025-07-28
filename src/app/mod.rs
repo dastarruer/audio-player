@@ -1,6 +1,7 @@
 mod audio_handler;
 mod ui;
 
+use fltk::app::Receiver;
 use fltk::{app, enums::Color, prelude::*, window};
 
 use std::sync::{Arc, Mutex, mpsc};
@@ -57,28 +58,39 @@ impl AudioApp {
 
     /// Run the app.
     pub fn run(&mut self) {
-        // Create a channel to send messages to the audio thread
+        // Create a channel to send messages to the audio thread, allowing ui elements to do things such as pause, play, rewind, etc.
         let (sender, recevier) = mpsc::channel();
         let receiver = Arc::new(Mutex::new(recevier));
 
+        // Create the channel for the progress bar and audio sink to communicate the audio position to each other
+        let (audio_pos_sender, audio_pos_receiver) = mpsc::channel::<Duration>();
+
         // Create the components
-        self.create_app_components(sender);
+        self.create_app_components(sender, audio_pos_receiver);
 
         // Show the window
         self.window.end();
         self.window.show();
 
         // Play the audio
-        self.audio_handler.play_audio(Arc::clone(&receiver));
+        self.audio_handler
+            .play_audio(Arc::clone(&receiver), audio_pos_sender);
+
+        // Start the progress bar
+        self.progress_bar.as_ref().unwrap().run();
 
         // Run the app
         self.app.run().unwrap();
     }
 
     /// Create all the necessary app components, such as the playback buttons, etc.
-    fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
+    fn create_app_components(
+        &mut self,
+        sender: mpsc::Sender<Message>,
+        audio_pos_receiver: mpsc::Receiver<Duration>,
+    ) {
         self.playback_buttons = Some(PlaybackButtons::new(AudioApp::WIN_WIDTH, sender));
-        self.progress_bar = Some(ProgressBar::new(AudioApp::WIN_WIDTH));
+        self.progress_bar = Some(ProgressBar::new(AudioApp::WIN_WIDTH, audio_pos_receiver));
     }
 
     /// Create the window and theme it.

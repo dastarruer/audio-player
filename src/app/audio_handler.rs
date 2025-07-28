@@ -30,7 +30,7 @@ impl AudioHandler {
     }
 
     /// Play audio and initialize self.sink and self.stream.
-    pub(crate) fn play_audio(&self, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) {
+    pub(crate) fn play_audio(&self, receiver: Arc<Mutex<mpsc::Receiver<Message>>>, audio_pos_sender: mpsc::Sender<Duration>) {
         let sink_ref = Arc::clone(&self.sink);
         let stream_ref = Arc::clone(&self.stream);
 
