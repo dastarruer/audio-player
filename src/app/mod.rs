@@ -210,13 +210,13 @@ impl App {
 
     /// Create all the necessary app components, such as the playback buttons, etc.
     fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
-        self.playback_buttons = Some(PlaybackButtons::new(Self::WIN_WIDTH, sender));
+        self.playback_buttons = Some(PlaybackButtons::new(App::WIN_WIDTH, sender));
     }
 
     /// Create the window and theme it.
     fn create_window() -> window::DoubleWindow {
         let mut win = window::Window::default()
-            .with_size(Self::WIN_WIDTH, Self::WIN_HEIGHT)
+            .with_size(App::WIN_WIDTH, App::WIN_HEIGHT)
             .with_label("My window");
         win.set_color(Color::White);
         win
