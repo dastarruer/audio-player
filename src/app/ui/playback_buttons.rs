@@ -14,13 +14,15 @@ pub struct PlaybackButtons {
 impl PlaybackButtons {
     const SEEK_DURATION_SECS: u64 = 5;
 
+    /// Create new playback buttons
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
         const BTN_SIZE: i32 = 30;
         const BTN_Y: i32 = 200; // Since every button will be at the same y-coordinate, each button shares the same constant
+        const BTN_OFFSET: i32 = 100;
 
         let play_btn_x = (win_width - BTN_SIZE) / 2; // Center the button horizontally
-        let fast_forward_btn_x = play_btn_x + 100;
-        let rewind_btn_x = play_btn_x - 100;
+        let fast_forward_btn_x = play_btn_x + BTN_OFFSET;
+        let rewind_btn_x = play_btn_x - BTN_OFFSET;
 
         let play_button =
             PlaybackButtons::create_play_button(BTN_SIZE, play_btn_x, BTN_Y, sender.clone());
