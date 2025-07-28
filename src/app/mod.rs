@@ -11,8 +11,10 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use std::time::Duration;
 
+use crate::app::ui::playback_buttons::PlaybackButtons;
+
 /// A message to be sent to the audio thread
-enum Message {
+pub enum Message {
     Play,
     Pause,
     FastForward(Duration),
@@ -160,7 +162,7 @@ pub struct App {
     window: window::DoubleWindow,
 
     /// Buttons to control playback. These are the pause, rewind, and fast-forward buttons.
-    playback_buttons: Option<[button::Button; 3]>,
+    playback_buttons: Option<PlaybackButtons>,
 
     /// An AudioHandler, which will handle audio related functions such as playing audio.
     audio_handler: AudioHandler,
@@ -169,12 +171,6 @@ pub struct App {
 impl App {
     const WIN_WIDTH: i32 = 400;
     const WIN_HEIGHT: i32 = 300;
-
-    const PLAY_BTN_SIZE: i32 = 30;
-    const PLAY_BTN_X: i32 = (Self::WIN_WIDTH - Self::PLAY_BTN_SIZE) / 2; // Center the button horizontally
-    const PLAY_BTN_Y: i32 = 200;
-
-    const SEEK_DURATION_SECS: u64 = 5;
 
     /// Create the new App.
     pub fn new() -> App {
@@ -214,7 +210,7 @@ impl App {
 
     /// Create all the necessary app components, such as the playback buttons, etc.
     fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
-        self.playback_buttons = Some(self.create_playback_buttons(sender.clone()));
+        self.playback_buttons = Some(PlaybackButtons::new(Self::WIN_WIDTH, sender));
     }
 
     /// Create the window and theme it.
@@ -224,109 +220,5 @@ impl App {
             .with_label("My window");
         win.set_color(Color::White);
         win
-    }
-
-    fn style_button(mut btn: button::Button) -> button::Button {
-        // Remove focus border around button
-        btn.clear_visible_focus();
-
-        // Remove button background
-        btn.set_frame(fltk::enums::FrameType::NoBox);
-
-        btn
-    }
-
-    /// Create the play button and theme it.
-    fn create_play_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
-        const PLAY_BUTTON: &str = "";
-        const PAUSE_BUTTON: &str = "";
-
-        let mut btn = App::style_button(
-            button::Button::default()
-                .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
-                .with_pos(Self::PLAY_BTN_X, Self::PLAY_BTN_Y)
-                .with_label(PAUSE_BUTTON),
-        );
-
-        // Define a function to execute once the button is clicked
-        btn.set_callback(move |btn| {
-            // Play/pause audio
-            match btn.label().as_str() {
-                PAUSE_BUTTON => {
-                    btn.set_label(PLAY_BUTTON);
-
-                    // Send a message to the audio thread to pause the audio
-                    match sender.send(Message::Pause) {
-                        Ok(_) => (),
-                        Err(e) => println!("Unable to play audio: {:?}", e),
-                    };
-                }
-                PLAY_BUTTON => {
-                    btn.set_label(PAUSE_BUTTON);
-
-                    // Send a message to the audio thread to play the audio
-                    match sender.send(Message::Play) {
-                        Ok(_) => (),
-                        Err(e) => println!("Unable to play audio: {:?}", e),
-                    };
-                }
-                _ => unreachable!(),
-            };
-        });
-
-        btn
-    }
-
-    /// Create playback buttons to rewind,, fast-forward and play/pause.
-    fn create_playback_buttons(&self, sender: mpsc::Sender<Message>) -> [button::Button; 3] {
-        let seek_forwards_btn = self.create_fast_forward_button(sender.clone());
-        let seek_backwards_btn = self.create_rewind_button(sender.clone());
-        let play_btn = self.create_play_button(sender.clone());
-
-        [seek_backwards_btn, seek_forwards_btn, play_btn]
-    }
-
-    /// Create the fast-forwards button.
-    fn create_fast_forward_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
-        let mut seek_forwards_btn = App::style_button(
-            button::Button::default()
-                .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
-                .with_pos(Self::PLAY_BTN_X + 100, Self::PLAY_BTN_Y)
-                .with_label("󰵱"),
-        );
-
-        seek_forwards_btn.set_callback(move |_| {
-            // Send a fast-forward message to the audio thread
-            match sender.send(Message::FastForward(Duration::from_secs(
-                Self::SEEK_DURATION_SECS,
-            ))) {
-                Ok(_) => (),
-                Err(e) => println!("Unable to fast-forward: {:?}", e),
-            }
-        });
-
-        seek_forwards_btn
-    }
-
-    /// Create the rewind button.
-    fn create_rewind_button(&self, sender: mpsc::Sender<Message>) -> button::Button {
-        let mut seek_backwards_btn = App::style_button(
-            button::Button::default()
-                .with_size(Self::PLAY_BTN_SIZE, Self::PLAY_BTN_SIZE)
-                .with_pos(Self::PLAY_BTN_X - 100, Self::PLAY_BTN_Y)
-                .with_label("󰴪"),
-        );
-
-        seek_backwards_btn.set_callback(move |_| {
-            // Send a rewind message to the audio thread
-            match sender.send(Message::Rewind(Duration::from_secs(
-                Self::SEEK_DURATION_SECS,
-            ))) {
-                Ok(_) => (),
-                Err(e) => println!("Unable to rewind: {:?}", e),
-            }
-        });
-
-        seek_backwards_btn
     }
 }
