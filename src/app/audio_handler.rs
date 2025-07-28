@@ -17,6 +17,9 @@ pub(crate) struct AudioHandler {
 
     /// The audio that is playing
     stream: Arc<Mutex<Option<OutputStream>>>,
+
+    /// The receiver that will receive the audio's current position, and update accordingly
+    audio_length: Option<Duration>,
 }
 
 impl AudioHandler {
@@ -26,7 +29,11 @@ impl AudioHandler {
         let sink = Arc::new(Mutex::new(None));
         let stream = Arc::new(Mutex::new(None));
 
-        AudioHandler { sink, stream }
+        AudioHandler {
+            sink,
+            stream,
+            audio_length: None,
+        }
     }
 
     /// Play audio and initialize self.sink and self.stream.
@@ -39,50 +46,7 @@ impl AudioHandler {
         let stream_ref = Arc::clone(&self.stream);
 
         thread::spawn(move || {
-            // Get an output stream handle to the default physical sound device.
-            let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
-                .expect("open default audio stream");
-
-            // Create a new audio sink, which will be used to control playback of audio
-            let sink = rodio::Sink::connect_new(&stream_handle.mixer());
-
-            // Load sound file
-            let file_path = "../test.mp3";
-            let file = match File::open(file_path) {
-                Ok(file) => file,
-                Err(_) => {
-                    eprintln!("File path does not exist. Exiting...");
-                    exit(1);
-                }
-            };
-
-            // Get the byte length of the file
-            let byte_len = match file.metadata() {
-                Ok(metadata) => metadata.len(),
-                Err(_) => {
-                    eprintln!("Unable to determine file byte length. Exiting...");
-                    exit(1);
-                }
-            };
-
-            // I have no idea what this does
-            let file = BufReader::new(file);
-
-            // Decode that sound file into a source
-            let source = match Decoder::builder()
-                .with_data(file)
-                // Specify the length of the audio source for reliable seeking
-                .with_byte_len(byte_len)
-                // Essential to allow for seeking backwards
-                .with_seekable(true)
-                .build()
-            {
-                Ok(source) => source,
-                Err(_) => {
-                    eprintln!("File format not supported. Exiting...");
-                    exit(1);
-                }
-            };
+            let (stream_handle, sink, source) = AudioHandler::get_audio_structs();
 
             // Play the sound directly on the device
             sink.append(source);
@@ -113,6 +77,54 @@ impl AudioHandler {
                 AudioHandler::handle_messages(message, &sink_ref);
             }
         });
+    }
+
+    fn get_audio_structs() -> (OutputStream, Sink, Decoder<BufReader<File>>) {
+        // Get an output stream handle to the default physical sound device.
+        let stream_handle =
+            rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
+
+        // Create a new audio sink, which will be used to control playback of audio
+        let sink = rodio::Sink::connect_new(&stream_handle.mixer());
+
+        // Load sound file
+        let file_path = "../test.mp3";
+        let file = match File::open(file_path) {
+            Ok(file) => file,
+            Err(_) => {
+                eprintln!("File path does not exist. Exiting...");
+                exit(1);
+            }
+        };
+
+        // Get the byte length of the file
+        let byte_len = match file.metadata() {
+            Ok(metadata) => metadata.len(),
+            Err(_) => {
+                eprintln!("Unable to determine file byte length. Exiting...");
+                exit(1);
+            }
+        };
+
+        // I have no idea what this does
+        let file = BufReader::new(file);
+
+        // Decode that sound file into a source
+        let source = match Decoder::builder()
+            .with_data(file)
+            // Specify the length of the audio source for reliable seeking
+            .with_byte_len(byte_len)
+            // Essential to allow for seeking backwards
+            .with_seekable(true)
+            .build()
+        {
+            Ok(source) => source,
+            Err(_) => {
+                eprintln!("File format not supported. Exiting...");
+                exit(1);
+            }
+        };
+        (stream_handle, sink, source)
     }
 
     /// A function that handles messages sent to the audio thread.

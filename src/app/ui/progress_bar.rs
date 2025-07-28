@@ -7,12 +7,19 @@ use fltk::{misc::Progress, prelude::WidgetExt};
 pub struct ProgressBar {
     _progress_bar: Progress,
 
+    /// Stores the length of the audio in order to calculate progress
+    audio_length: Duration,
+
     /// The receiver that will receive the audio's current position, and update accordingly
     audio_pos_receiver: mpsc::Receiver<Duration>,
 }
 
 impl ProgressBar {
-    pub fn new(win_width: i32, audio_pos_receiver: mpsc::Receiver<Duration>) -> ProgressBar {
+    pub fn new(
+        win_width: i32,
+        audio_length: Duration,
+        audio_pos_receiver: mpsc::Receiver<Duration>,
+    ) -> ProgressBar {
         const WIDTH: i32 = 250;
         const PROGRESS_BAR_Y: i32 = 195;
 
@@ -26,6 +33,7 @@ impl ProgressBar {
 
         ProgressBar {
             _progress_bar,
+            audio_length,
             audio_pos_receiver,
         }
     }
