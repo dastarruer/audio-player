@@ -1,5 +1,5 @@
-use rodio::Sink;
 use rodio::{Decoder, OutputStream};
+use rodio::{Sink, stream};
 use std::fs::File;
 use std::io::BufReader;
 use std::process::exit;
@@ -46,7 +46,14 @@ impl AudioHandler {
         let stream_ref = Arc::clone(&self.stream);
 
         thread::spawn(move || {
-            let (stream_handle, sink, source) = AudioHandler::get_audio_structs();
+            // Get an output stream handle to the default physical sound device.
+            let stream_handle = AudioHandler::open_output_stream();
+
+            // Create a new audio sink, which will be used to control playback of audio
+            let sink = AudioHandler::create_sink(&stream_handle);
+
+            let file_path = "../test.mp3";
+            let source = AudioHandler::load_audio_source_from_file(file_path);
 
             // Play the sound directly on the device
             sink.append(source);
@@ -79,16 +86,16 @@ impl AudioHandler {
         });
     }
 
-    fn get_audio_structs() -> (OutputStream, Sink, Decoder<BufReader<File>>) {
-        // Get an output stream handle to the default physical sound device.
-        let stream_handle =
-            rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
+    fn create_sink(stream_handle: &OutputStream) -> Sink {
+        rodio::Sink::connect_new(&stream_handle.mixer())
+    }
 
-        // Create a new audio sink, which will be used to control playback of audio
-        let sink = rodio::Sink::connect_new(&stream_handle.mixer());
+    fn open_output_stream() -> OutputStream {
+        rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream")
+    }
 
+    fn load_audio_source_from_file(file_path: &str) -> Decoder<BufReader<File>> {
         // Load sound file
-        let file_path = "../test.mp3";
         let file = match File::open(file_path) {
             Ok(file) => file,
             Err(_) => {
@@ -124,7 +131,7 @@ impl AudioHandler {
                 exit(1);
             }
         };
-        (stream_handle, sink, source)
+        source
     }
 
     /// A function that handles messages sent to the audio thread.
