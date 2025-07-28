@@ -9,7 +9,7 @@ pub struct ProgressBar {
 impl ProgressBar {
     pub fn new(win_width: i32) -> ProgressBar {
         const WIDTH: i32 = 250;
-        let PROGRESS_BAR_Y = 195;
+        const PROGRESS_BAR_Y: i32 = 195;
 
         let progress_bar_x = (win_width - WIDTH) / 2; // Center the button horizontally
 
