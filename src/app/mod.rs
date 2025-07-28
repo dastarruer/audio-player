@@ -9,6 +9,8 @@ use std::time::Duration;
 use audio_handler::AudioHandler;
 use ui::playback_buttons::PlaybackButtons;
 
+use crate::app::ui::progress_bar::ProgressBar;
+
 /// A message to be sent to the audio thread
 pub enum Message {
     Play,
@@ -24,6 +26,9 @@ pub struct AudioApp {
 
     /// Buttons to control playback. These are the pause, rewind, and fast-forward buttons.
     playback_buttons: Option<PlaybackButtons>,
+
+    /// Progress bar to show the user the current timestamp of the audio. Also allows them to seek to a certain position.
+    progress_bar: Option<ProgressBar>,
 
     /// An AudioHandler, which will handle audio related functions such as playing audio.
     audio_handler: AudioHandler,
@@ -45,6 +50,7 @@ impl AudioApp {
             app,
             window,
             playback_buttons: None,
+            progress_bar: None,
             audio_handler,
         }
     }
@@ -72,6 +78,7 @@ impl AudioApp {
     /// Create all the necessary app components, such as the playback buttons, etc.
     fn create_app_components(&mut self, sender: mpsc::Sender<Message>) {
         self.playback_buttons = Some(PlaybackButtons::new(AudioApp::WIN_WIDTH, sender));
+        self.progress_bar = Some(ProgressBar::new(AudioApp::WIN_WIDTH));
     }
 
     /// Create the window and theme it.
