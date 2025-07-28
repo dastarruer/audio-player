@@ -24,7 +24,10 @@ impl ProgressBar {
 
         _progress_bar.set_value(15.0);
 
-        ProgressBar { _progress_bar, audio_pos_receiver }
+        ProgressBar {
+            _progress_bar,
+            audio_pos_receiver,
+        }
     }
 
     /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position.
@@ -33,7 +36,7 @@ impl ProgressBar {
         thread::spawn(move || {
             for pos in self.audio_pos_receiver {
                 println!("Current position: {:?}", pos);
-            };
+            }
         });
     }
 }
