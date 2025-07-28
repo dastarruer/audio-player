@@ -10,6 +10,7 @@ use std::time::Duration;
 use crate::app::Message;
 
 /// Store the functionality for playing audio and other functions.
+// Note that pub(crate) means that AudioHandler can only be used by files in `app/`
 pub(crate) struct AudioHandler {
     /// Audio sink to control playback
     sink: Arc<Mutex<Option<Sink>>>,
