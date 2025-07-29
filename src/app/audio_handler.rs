@@ -1,5 +1,5 @@
+use rodio::Sink;
 use rodio::{Decoder, OutputStream, Source};
-use rodio::{Sink};
 use std::fs::File;
 use std::io::BufReader;
 use std::process::exit;
@@ -26,10 +26,7 @@ impl AudioHandler {
         let sink = Arc::new(Mutex::new(None));
         let stream = Arc::new(Mutex::new(None));
 
-        AudioHandler {
-            sink,
-            stream,
-        }
+        AudioHandler { sink, stream }
     }
 
     /// Load audio source from file, returning the Decoder and its total duration (if available).
@@ -87,12 +84,15 @@ impl AudioHandler {
             *stream_ref.lock().unwrap() = Some(stream_handle);
 
             // Send the audio's current position to the progress bar
-            AudioHandler::send_audio_pos(audio_pos_sender, Arc::clone(&sink_ref));
+            AudioHandler::send_audio_pos(audio_pos_sender.clone(), Arc::clone(&sink_ref));
 
             // Continuously scan for new messages sent by the AudioApp
             loop {
+                // Clone the sender on every iteration to appease the all-knowing borrow checker
+                let audio_pos_sender = audio_pos_sender.clone();
+
                 let message = receiver.lock().unwrap().recv().unwrap();
-                AudioHandler::handle_messages(message, &sink_ref);
+                AudioHandler::handle_messages(message, &sink_ref, audio_pos_sender);
             }
         });
     }
@@ -124,7 +124,11 @@ impl AudioHandler {
     }
 
     /// A function that handles messages sent to the audio thread.
-    fn handle_messages(message: Message, sink_ref: &Arc<Mutex<Option<Sink>>>) {
+    fn handle_messages(
+        message: Message,
+        sink_ref: &Arc<Mutex<Option<Sink>>>,
+        audio_pos_sender: mpsc::Sender<Duration>,
+    ) {
         match message {
             Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
                 sink.play();
@@ -135,6 +139,12 @@ impl AudioHandler {
             Message::FastForward(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
                 let current_pos = sink.get_pos();
                 let target_pos = current_pos + duration_secs;
+
+                // Send the new position immediately
+                match audio_pos_sender.send(sink.get_pos()) {
+                    Ok(_) => (),
+                    Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
+                };
 
                 match sink.try_seek(target_pos) {
                     Ok(_) => (),
@@ -149,7 +159,12 @@ impl AudioHandler {
                     .checked_sub(duration_secs)
                     .unwrap_or(Duration::ZERO);
 
-                // Seek to the target position
+                // Send the new position immediately
+                match audio_pos_sender.send(sink.get_pos()) {
+                    Ok(_) => (),
+                    Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
+                };
+
                 match sink.try_seek(target_pos) {
                     Ok(_) => (),
                     Err(e) => eprintln!("Unable to rewind: {:?}", e),
