@@ -65,8 +65,7 @@ impl AudioHandler {
             *stream_ref.lock().unwrap() = Some(stream_handle);
 
             // Send the audio's current position to the progress bar
-            let new_sink_ref = Arc::clone(&sink_ref);
-            AudioHandler::send_audio_pos(audio_pos_sender, new_sink_ref);
+            AudioHandler::send_audio_pos(audio_pos_sender, Arc::clone(&sink_ref));
 
             // Continuously scan for new messages sent by the AudioApp
             loop {
