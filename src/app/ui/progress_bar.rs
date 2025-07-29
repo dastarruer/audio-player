@@ -29,6 +29,7 @@ impl ProgressBar {
             .with_pos(progress_bar_x, PROGRESS_BAR_Y)
             .with_size(WIDTH, 5);
 
+        // Set the range to be from 0 - 100 to allow for percentage values
         progress_bar.set_minimum(0.0);
         progress_bar.set_maximum(100.0);
 
