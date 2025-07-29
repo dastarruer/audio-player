@@ -58,7 +58,7 @@ impl AudioHandler {
             // Play the sound directly on the device
             sink.append(source);
 
-            // Add sink to self.sink so that it outlives the current thread
+            // Add sink to self.sink so that it can be accessed by other methods
             *sink_ref.lock().unwrap() = Some(sink);
 
             // Add stream_handle to self.stream_handle so that it outlives the current thread and keeps playing audio
