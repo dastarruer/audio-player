@@ -88,11 +88,8 @@ impl AudioHandler {
 
             // Continuously scan for new messages sent by the AudioApp
             loop {
-                // Clone the sender on every iteration to appease the all-knowing borrow checker
-                let audio_pos_sender = audio_pos_sender.clone();
-
                 let message = receiver.lock().unwrap().recv().unwrap();
-                AudioHandler::handle_messages(message, &sink_ref, audio_pos_sender);
+                AudioHandler::handle_messages(message, &sink_ref, &audio_pos_sender);
             }
         });
     }
@@ -127,7 +124,7 @@ impl AudioHandler {
     fn handle_messages(
         message: Message,
         sink_ref: &Arc<Mutex<Option<Sink>>>,
-        audio_pos_sender: mpsc::Sender<Duration>,
+        audio_pos_sender: &mpsc::Sender<Duration>,
     ) {
         match message {
             Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
@@ -137,40 +134,52 @@ impl AudioHandler {
                 sink.pause();
             }),
             Message::FastForward(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
-                let current_pos = sink.get_pos();
-                let target_pos = current_pos + duration_secs;
-
-                // Send the new position immediately
-                match audio_pos_sender.send(sink.get_pos()) {
-                    Ok(_) => (),
-                    Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
-                };
-
-                match sink.try_seek(target_pos) {
-                    Ok(_) => (),
-                    Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
-                };
+                AudioHandler::fast_forward(&audio_pos_sender, duration_secs, sink);
             }),
             Message::Rewind(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
-                let current_pos = sink.get_pos();
-
-                // Subtract `duration_secs` from `current_pos`, and if result is negative, default to Duration::ZERO
-                let target_pos = current_pos
-                    .checked_sub(duration_secs)
-                    .unwrap_or(Duration::ZERO);
-
-                // Send the new position immediately
-                match audio_pos_sender.send(sink.get_pos()) {
-                    Ok(_) => (),
-                    Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
-                };
-
-                match sink.try_seek(target_pos) {
-                    Ok(_) => (),
-                    Err(e) => eprintln!("Unable to rewind: {:?}", e),
-                };
+                AudioHandler::rewind(audio_pos_sender, duration_secs, sink);
             }),
         }
+    }
+
+    fn fast_forward(
+        audio_pos_sender: &mpsc::Sender<Duration>,
+        duration_secs: Duration,
+        sink: &Sink,
+    ) {
+        let current_pos = sink.get_pos();
+        let target_pos = current_pos + duration_secs;
+
+        // Send the new position immediately
+        match audio_pos_sender.send(sink.get_pos()) {
+            Ok(_) => (),
+            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
+        };
+
+        match sink.try_seek(target_pos) {
+            Ok(_) => (),
+            Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
+        };
+    }
+
+    fn rewind(audio_pos_sender: &mpsc::Sender<Duration>, duration_secs: Duration, sink: &Sink) {
+        let current_pos = sink.get_pos();
+
+        // Subtract `duration_secs` from `current_pos`, and if result is negative, default to Duration::ZERO
+        let target_pos = current_pos
+            .checked_sub(duration_secs)
+            .unwrap_or(Duration::ZERO);
+
+        // Send the new position immediately
+        match audio_pos_sender.send(sink.get_pos()) {
+            Ok(_) => (),
+            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
+        };
+
+        match sink.try_seek(target_pos) {
+            Ok(_) => (),
+            Err(e) => eprintln!("Unable to rewind: {:?}", e),
+        };
     }
 
     /// Run a closure that operates on `sink` for audio playback control by extracting `sink` from `sink_ref`.
