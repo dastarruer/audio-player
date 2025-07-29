@@ -1,4 +1,4 @@
-use rodio::{Decoder, OutputStream};
+use rodio::{Decoder, OutputStream, Source};
 use rodio::{Sink, stream};
 use std::fs::File;
 use std::io::BufReader;
@@ -36,11 +36,40 @@ impl AudioHandler {
         }
     }
 
+    /// Load audio source from file, returning the Decoder and its total duration (if available).
+    pub(crate) fn load_audio(file_path: &str) -> (Decoder<BufReader<File>>, Option<Duration>) {
+        // Load sound file
+        let file = File::open(file_path).unwrap_or_else(|_| {
+            eprintln!("File path does not exist. Exiting...");
+            exit(1);
+        });
+
+        let byte_len = file.metadata().map(|m| m.len()).unwrap_or(0);
+        let file = BufReader::new(file);
+
+        let decoder = Decoder::builder()
+            .with_data(file)
+            // Specify the length of the audio source for reliable seeking
+            .with_byte_len(byte_len)
+            // Essential to allow for seeking backwards
+            .with_seekable(true)
+            .build()
+            .unwrap_or_else(|_| {
+                eprintln!("File format not supported. Exiting...");
+                exit(1);
+            });
+
+        let duration = decoder.total_duration();
+
+        (decoder, duration)
+    }
+
     /// Play audio and initialize self.sink and self.stream.
     pub(crate) fn play_audio(
         &self,
         receiver: Arc<Mutex<mpsc::Receiver<Message>>>,
         audio_pos_sender: mpsc::Sender<Duration>,
+        decoder: Decoder<BufReader<File>>,
     ) {
         let sink_ref = Arc::clone(&self.sink);
         let stream_ref = Arc::clone(&self.stream);
@@ -52,11 +81,8 @@ impl AudioHandler {
             // Create a new audio sink, which will be used to control playback of audio
             let sink = AudioHandler::create_sink(&stream_handle);
 
-            let file_path = "/home/dastarruer/Documents/coding/rust/audio_player/test.mp3";
-            let source = AudioHandler::load_audio_source_from_file(file_path);
-
             // Play the sound directly on the device
-            sink.append(source);
+            sink.append(decoder);
 
             // Add sink to self.sink so that it can be accessed by other methods
             *sink_ref.lock().unwrap() = Some(sink);
@@ -99,46 +125,6 @@ impl AudioHandler {
 
     fn open_output_stream() -> OutputStream {
         rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream")
-    }
-
-    fn load_audio_source_from_file(file_path: &str) -> Decoder<BufReader<File>> {
-        // Load sound file
-        let file = match File::open(file_path) {
-            Ok(file) => file,
-            Err(_) => {
-                eprintln!("File path does not exist. Exiting...");
-                exit(1);
-            }
-        };
-
-        // Get the byte length of the file
-        let byte_len = match file.metadata() {
-            Ok(metadata) => metadata.len(),
-            Err(_) => {
-                eprintln!("Unable to determine file byte length. Exiting...");
-                exit(1);
-            }
-        };
-
-        // I have no idea what this does
-        let file = BufReader::new(file);
-
-        // Decode that sound file into a source
-        let source = match Decoder::builder()
-            .with_data(file)
-            // Specify the length of the audio source for reliable seeking
-            .with_byte_len(byte_len)
-            // Essential to allow for seeking backwards
-            .with_seekable(true)
-            .build()
-        {
-            Ok(source) => source,
-            Err(_) => {
-                eprintln!("File format not supported. Exiting...");
-                exit(1);
-            }
-        };
-        source
     }
 
     /// A function that handles messages sent to the audio thread.
