@@ -1,7 +1,6 @@
 mod audio_handler;
 mod ui;
 
-use fltk::app::Receiver;
 use fltk::{app, enums::Color, prelude::*, window};
 
 use std::process::exit;
