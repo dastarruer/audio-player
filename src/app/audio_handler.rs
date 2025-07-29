@@ -1,5 +1,5 @@
 use rodio::{Decoder, OutputStream, Source};
-use rodio::{Sink, stream};
+use rodio::{Sink};
 use std::fs::File;
 use std::io::BufReader;
 use std::process::exit;
@@ -17,9 +17,6 @@ pub(crate) struct AudioHandler {
 
     /// The audio that is playing
     stream: Arc<Mutex<Option<OutputStream>>>,
-
-    /// The receiver that will receive the audio's current position, and update accordingly
-    audio_length: Option<Duration>,
 }
 
 impl AudioHandler {
@@ -32,7 +29,6 @@ impl AudioHandler {
         AudioHandler {
             sink,
             stream,
-            audio_length: None,
         }
     }
 
