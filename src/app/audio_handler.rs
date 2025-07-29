@@ -52,7 +52,7 @@ impl AudioHandler {
             // Create a new audio sink, which will be used to control playback of audio
             let sink = AudioHandler::create_sink(&stream_handle);
 
-            let file_path = "../test.mp3";
+            let file_path = "/home/dastarruer/Documents/coding/rust/audio_player/test.mp3";
             let source = AudioHandler::load_audio_source_from_file(file_path);
 
             // Play the sound directly on the device
