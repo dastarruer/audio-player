@@ -4,6 +4,7 @@ mod ui;
 use fltk::app::Receiver;
 use fltk::{app, enums::Color, prelude::*, window};
 
+use std::process::exit;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 
@@ -65,8 +66,17 @@ impl AudioApp {
         // Create the channel for the progress bar and audio sink to communicate the audio position to each other
         let (audio_pos_sender, audio_pos_receiver) = mpsc::channel::<Duration>();
 
+        // Load the audio
+        let (decoder, audio_length) = AudioHandler::load_audio(
+            "/home/dastarruer/Documents/coding/rust/audio_player/test.mp3",
+        );
+        let audio_length = audio_length.unwrap_or_else(|| {
+            eprintln!("Duration could not be determined. Exiting...");
+            exit(1);
+        });
+
         // Create the components
-        self.create_app_components(sender, audio_pos_receiver);
+        self.create_app_components(sender, audio_length, audio_pos_receiver);
 
         // Show the window
         self.window.end();
@@ -74,7 +84,7 @@ impl AudioApp {
 
         // Play the audio
         self.audio_handler
-            .play_audio(Arc::clone(&receiver), audio_pos_sender);
+            .play_audio(Arc::clone(&receiver), audio_pos_sender, decoder);
 
         // Start the progress bar
         // .take() will take out the progress bar from Option, meaning after this, `progress_bar` is now `None`, and its original value is consumed by `run`
@@ -88,10 +98,15 @@ impl AudioApp {
     fn create_app_components(
         &mut self,
         sender: mpsc::Sender<Message>,
+        audio_length: Duration,
         audio_pos_receiver: mpsc::Receiver<Duration>,
     ) {
         self.playback_buttons = Some(PlaybackButtons::new(AudioApp::WIN_WIDTH, sender));
-        self.progress_bar = Some(ProgressBar::new(AudioApp::WIN_WIDTH, audio_pos_receiver));
+        self.progress_bar = Some(ProgressBar::new(
+            AudioApp::WIN_WIDTH,
+            audio_length,
+            audio_pos_receiver,
+        ));
     }
 
     /// Create the window and theme it.
