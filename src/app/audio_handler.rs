@@ -101,12 +101,16 @@ impl AudioHandler {
     ) {
         thread::spawn(move || {
             loop {
-                let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| sink.get_pos());
+                let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| {
+                    // Delay before sending position, otherwise a completely wrong position will be sent
+                    thread::sleep(Duration::from_millis(100));
+                    sink.get_pos()
+                });
 
                 // Send the current position to the progress bar
                 match audio_pos_sender.send(current_pos) {
                     Ok(_) => (),
-                    Err(_) => break, // Break the loop because if audio_pos_sender.send returns an error, it means the receiving end does not exist anymore
+                    Err(_) => break,
                 };
             }
         });
@@ -151,7 +155,7 @@ impl AudioHandler {
         let target_pos = current_pos + duration_secs;
 
         // Send the new position immediately
-        match audio_pos_sender.send(sink.get_pos()) {
+        match audio_pos_sender.send(current_pos) {
             Ok(_) => (),
             Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
         };
