@@ -39,7 +39,7 @@ impl ProgressBar {
         }
     }
 
-    /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position.
+    /// Update the progress bar based on the audio's current position.
     pub fn update(&mut self) {
         // Drain all available positions and keep the newest one, so the progress bar never lags behind
         while let Ok(pos) = self.audio_pos_receiver.try_recv() {
