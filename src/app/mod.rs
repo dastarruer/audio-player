@@ -90,12 +90,11 @@ impl AudioApp {
         while self.app.wait() {
             // Sleep thread so that fltk updates even when idling
             thread::sleep(Duration::from_millis(50));
-            
+
             // Update progress bar
             if let Some(pb) = self.progress_bar.as_mut() {
                 pb.update();
             }
-
         }
     }
 
