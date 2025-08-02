@@ -45,7 +45,6 @@ impl ProgressBar {
     pub fn run(mut self) {
         thread::spawn(move || {
             for pos in &self.audio_pos_receiver {
-                println!("{:?}", pos);
                 let percentage = self.get_percentage_of_audio_played(pos);
                 self.progress_bar.set_value(percentage);
             }

@@ -153,16 +153,17 @@ impl AudioHandler {
     ) {
         let current_pos = sink.get_pos();
         let target_pos = current_pos + duration_secs;
-
-        // Send the new position immediately
-        match audio_pos_sender.send(current_pos) {
-            Ok(_) => (),
-            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
-        };
+        println!("{:?}", target_pos);
 
         match sink.try_seek(target_pos) {
             Ok(_) => (),
             Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
+        };
+
+        // Send the new position to the progress bar
+        match audio_pos_sender.send(target_pos) {
+            Ok(_) => (),
+            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
         };
     }
 
@@ -174,15 +175,15 @@ impl AudioHandler {
             .checked_sub(duration_secs)
             .unwrap_or(Duration::ZERO);
 
-        // Send the new position immediately
-        match audio_pos_sender.send(sink.get_pos()) {
-            Ok(_) => (),
-            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
-        };
-
         match sink.try_seek(target_pos) {
             Ok(_) => (),
             Err(e) => eprintln!("Unable to rewind: {:?}", e),
+        };
+
+        // Send the new position to the progress bar
+        match audio_pos_sender.send(target_pos) {
+            Ok(_) => (),
+            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
         };
     }
 
