@@ -7,9 +7,6 @@ use fltk::{misc::Progress, prelude::WidgetExt};
 pub struct ProgressBar {
     progress_bar: Progress,
 
-    /// Stores the length of the audio in order to calculate progress
-    audio_length: Duration,
-
     /// The receiver that will receive the audio's current position, and update accordingly
     audio_pos_receiver: mpsc::Receiver<Duration>,
 }
@@ -29,13 +26,12 @@ impl ProgressBar {
             .with_pos(progress_bar_x, PROGRESS_BAR_Y)
             .with_size(WIDTH, 5);
 
-        // Set the range to be from 0 - 100 to allow for percentage values
+        // Set the range to be from 0 - audio length so progress bar value can simply be set to current position without doing any calculations
         progress_bar.set_minimum(0.0);
-        progress_bar.set_maximum(100.0);
+        progress_bar.set_maximum(audio_length.as_millis() as f64);
 
         ProgressBar {
             progress_bar,
-            audio_length,
             audio_pos_receiver,
         }
     }
@@ -45,17 +41,9 @@ impl ProgressBar {
     pub fn run(mut self) {
         thread::spawn(move || {
             for pos in &self.audio_pos_receiver {
-                let percentage = self.get_percentage_of_audio_played(pos);
-                self.progress_bar.set_value(percentage);
+                // let percentage = self.get_percentage_of_audio_played(pos);
+                self.progress_bar.set_value(pos.as_millis() as f64);
             }
         });
-    }
-
-    /// Returns the percentage of audio that has currently played.
-    fn get_percentage_of_audio_played(&self, current_pos: Duration) -> f64 {
-        let current_pos = current_pos.as_millis() as f64;
-        let total_duration = self.audio_length.as_millis() as f64;
-
-        (current_pos / total_duration) * 100.0
     }
 }
