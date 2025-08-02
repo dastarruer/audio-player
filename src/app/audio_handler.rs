@@ -108,6 +108,10 @@ impl AudioHandler {
                     Ok(_) => (),
                     Err(_) => break,
                 };
+
+                // Sleep to prevent using too much cpu
+                let delay = Duration::from_millis(50);
+                thread::sleep(delay);
             }
         });
     }
@@ -171,7 +175,7 @@ impl AudioHandler {
             Err(e) => eprintln!("Unable to rewind: {:?}", e),
         };
 
-        // Send the new position to the progress bar immediately to reduce lag
+        // Send the new position to the progress bar
         match audio_pos_sender.send(target_pos) {
             Ok(_) => (),
             Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
