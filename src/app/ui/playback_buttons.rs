@@ -4,12 +4,8 @@ use fltk::{button, prelude::*};
 
 use crate::app::Message;
 
-/// A struct to store the playback buttons: the play, fast-forward, and rewind buttons.
-pub struct PlaybackButtons {
-    _play_button: button::Button,
-    _fast_forward_button: button::Button,
-    _rewind_button: button::Button,
-}
+/// A struct to create the playback buttons: the play, fast-forward, and rewind buttons.
+pub struct PlaybackButtons {}
 
 impl PlaybackButtons {
     const SEEK_DURATION_SECS: u64 = 5;
@@ -24,24 +20,18 @@ impl PlaybackButtons {
         let fast_forward_btn_x = play_btn_x + BTN_OFFSET;
         let rewind_btn_x = play_btn_x - BTN_OFFSET;
 
-        let play_button =
-            PlaybackButtons::create_play_button(BTN_SIZE, play_btn_x, BTN_Y, sender.clone());
+        PlaybackButtons::create_play_button(BTN_SIZE, play_btn_x, BTN_Y, sender.clone());
 
-        let fast_forward_button = PlaybackButtons::create_fast_forward_button(
+        PlaybackButtons::create_fast_forward_button(
             BTN_SIZE,
             fast_forward_btn_x,
             BTN_Y,
             sender.clone(),
         );
 
-        let rewind_button =
-            PlaybackButtons::create_rewind_button(BTN_SIZE, rewind_btn_x, BTN_Y, sender);
+        PlaybackButtons::create_rewind_button(BTN_SIZE, rewind_btn_x, BTN_Y, sender);
 
-        PlaybackButtons {
-            _play_button: play_button,
-            _fast_forward_button: fast_forward_button,
-            _rewind_button: rewind_button,
-        }
+        PlaybackButtons {}
     }
 
     /// Style each playback button with a unified style
@@ -56,12 +46,7 @@ impl PlaybackButtons {
     }
 
     /// Create the play button and theme it.
-    fn create_play_button(
-        btn_size: i32,
-        btn_x: i32,
-        btn_y: i32,
-        sender: mpsc::Sender<Message>,
-    ) -> button::Button {
+    fn create_play_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
         const PLAY_BUTTON: &str = "";
         const PAUSE_BUTTON: &str = "";
 
@@ -97,8 +82,6 @@ impl PlaybackButtons {
                 _ => unreachable!(),
             };
         });
-
-        btn
     }
 
     /// Create the fast-forwards button.
@@ -107,7 +90,7 @@ impl PlaybackButtons {
         btn_x: i32,
         btn_y: i32,
         sender: mpsc::Sender<Message>,
-    ) -> button::Button {
+    ) {
         let mut seek_forwards_btn = PlaybackButtons::style_button(
             button::Button::default()
                 .with_size(btn_size, btn_size)
@@ -124,17 +107,10 @@ impl PlaybackButtons {
                 Err(e) => println!("Unable to fast-forward: {:?}", e),
             }
         });
-
-        seek_forwards_btn
     }
 
     /// Create the rewind button.
-    fn create_rewind_button(
-        btn_size: i32,
-        btn_x: i32,
-        btn_y: i32,
-        sender: mpsc::Sender<Message>,
-    ) -> button::Button {
+    fn create_rewind_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
         let mut seek_backwards_btn = PlaybackButtons::style_button(
             button::Button::default()
                 .with_size(btn_size, btn_size)
@@ -151,7 +127,5 @@ impl PlaybackButtons {
                 Err(e) => println!("Unable to rewind: {:?}", e),
             }
         });
-
-        seek_backwards_btn
     }
 }
