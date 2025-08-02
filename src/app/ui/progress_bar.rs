@@ -4,6 +4,7 @@ use fltk::{misc::Progress, prelude::WidgetExt};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
+#[derive(Debug)]
 pub struct ProgressBar {
     progress_bar: Progress,
 
@@ -37,13 +38,10 @@ impl ProgressBar {
     }
 
     /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position.
-    /// Note that this method consumes self.
-    pub fn run(mut self) {
-        thread::spawn(move || {
-            for pos in &self.audio_pos_receiver {
-                // let percentage = self.get_percentage_of_audio_played(pos);
-                self.progress_bar.set_value(pos.as_millis() as f64);
-            }
-        });
+    pub fn update(&mut self) {
+        if let Ok(pos) = self.audio_pos_receiver.try_recv() {
+            println!("{:?}", pos);
+            self.progress_bar.set_value(pos.as_millis() as f64);
+        }
     }
 }

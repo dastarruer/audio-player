@@ -5,6 +5,7 @@ use fltk::{app, enums::Color, prelude::*, window};
 
 use std::process::exit;
 use std::sync::{Arc, Mutex, mpsc};
+use std::thread;
 use std::time::Duration;
 
 use audio_handler::AudioHandler;
@@ -85,12 +86,17 @@ impl AudioApp {
         self.audio_handler
             .play_audio(Arc::clone(&receiver), audio_pos_sender, decoder);
 
-        // Start the progress bar
-        // .take() will take out the progress bar from Option, meaning after this, `progress_bar` is now `None`, and its original value is consumed by `run`
-        self.progress_bar.take().unwrap().run();
-
         // Run the app
-        self.app.run().unwrap();
+        while self.app.wait() {
+            // Sleep thread so that fltk updates even when idling
+            thread::sleep(Duration::from_millis(50));
+            
+            // Update progress bar
+            if let Some(pb) = self.progress_bar.as_mut() {
+                pb.update();
+            }
+
+        }
     }
 
     /// Create all the necessary app components, such as the playback buttons, etc.
