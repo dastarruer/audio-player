@@ -101,11 +101,7 @@ impl AudioHandler {
     ) {
         thread::spawn(move || {
             loop {
-                let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| {
-                    // Delay before sending position, otherwise a completely wrong position will be sent
-                    thread::sleep(Duration::from_millis(100));
-                    sink.get_pos()
-                });
+                let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| sink.get_pos());
 
                 // Send the current position to the progress bar
                 match audio_pos_sender.send(current_pos) {
@@ -153,18 +149,8 @@ impl AudioHandler {
     ) {
         let current_pos = sink.get_pos();
         let target_pos = current_pos + duration_secs;
-        println!("{:?}", target_pos);
 
-        match sink.try_seek(target_pos) {
-            Ok(_) => (),
-            Err(e) => eprintln!("Unable to fast-forward: {:?}", e),
-        };
-
-        // Send the new position to the progress bar
-        match audio_pos_sender.send(target_pos) {
-            Ok(_) => (),
-            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
-        };
+        AudioHandler::seek(audio_pos_sender, sink, target_pos);
     }
 
     fn rewind(audio_pos_sender: &mpsc::Sender<Duration>, duration_secs: Duration, sink: &Sink) {
@@ -175,12 +161,17 @@ impl AudioHandler {
             .checked_sub(duration_secs)
             .unwrap_or(Duration::ZERO);
 
+        AudioHandler::seek(audio_pos_sender, sink, target_pos);
+    }
+
+    /// Seek to a specific part in the audio and send the position to the progress bar
+    fn seek(audio_pos_sender: &mpsc::Sender<Duration>, sink: &Sink, target_pos: Duration) {
         match sink.try_seek(target_pos) {
             Ok(_) => (),
             Err(e) => eprintln!("Unable to rewind: {:?}", e),
         };
 
-        // Send the new position to the progress bar
+        // Send the new position to the progress bar immediately to reduce lag
         match audio_pos_sender.send(target_pos) {
             Ok(_) => (),
             Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
