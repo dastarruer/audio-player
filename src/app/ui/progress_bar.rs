@@ -9,6 +9,8 @@ pub struct ProgressBar {
 
     /// The receiver that will receive the audio's current position, and update accordingly
     audio_pos_receiver: mpsc::Receiver<Duration>,
+
+    current_audio_pos: Duration,
 }
 
 impl ProgressBar {
@@ -33,14 +35,18 @@ impl ProgressBar {
         ProgressBar {
             progress_bar,
             audio_pos_receiver,
+            current_audio_pos: Duration::from_secs(0),
         }
     }
 
     /// Run the progress bar in a seperate thread. This will initiate the progress updating logic based on the audio's current position.
     pub fn update(&mut self) {
-        if let Ok(pos) = self.audio_pos_receiver.try_recv() {
-            println!("{:?}", pos);
-            self.progress_bar.set_value(pos.as_millis() as f64);
+        // Drain all available positions and keep the newest one, so the progress bar never lags behind
+        while let Ok(pos) = self.audio_pos_receiver.try_recv() {
+            self.current_audio_pos = pos;
         }
+
+        self.progress_bar
+            .set_value(self.current_audio_pos.as_millis() as f64);
     }
 }
