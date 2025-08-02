@@ -4,7 +4,6 @@ use fltk::{misc::Progress, prelude::WidgetExt};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
-#[derive(Debug)]
 pub struct ProgressBar {
     progress_bar: Progress,
 
