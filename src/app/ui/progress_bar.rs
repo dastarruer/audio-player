@@ -2,7 +2,6 @@ use std::{sync::mpsc, time::Duration};
 
 use fltk::{
     enums::{Font, FrameType},
-    frame,
     misc::Progress,
     output,
     prelude::WidgetExt,
