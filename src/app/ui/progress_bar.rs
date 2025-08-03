@@ -20,7 +20,7 @@ impl ProgressBar {
         audio_pos_receiver: mpsc::Receiver<Duration>,
     ) -> ProgressBar {
         const WIDTH: i32 = 250;
-        const PROGRESS_BAR_Y: i32 = 195;
+        const PROGRESS_BAR_Y: i32 = 190;
 
         let progress_bar_x = (win_width - WIDTH) / 2; // Center the progress bar horizontally
 
