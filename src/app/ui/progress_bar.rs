@@ -13,7 +13,7 @@ pub struct ProgressBar {
     current_audio_pos: Duration,
 
     /// Display the audio's current position to the user
-    current_audio_pos_text: frame::Frame,
+    current_audio_pos_timestamp: frame::Frame,
 }
 
 impl ProgressBar {
@@ -58,7 +58,7 @@ impl ProgressBar {
             progress_bar,
             audio_pos_receiver,
             current_audio_pos: Duration::from_secs(0),
-            current_audio_pos_text,
+            current_audio_pos_timestamp: current_audio_pos_text,
         }
     }
 
@@ -69,7 +69,7 @@ impl ProgressBar {
             self.current_audio_pos = pos;
         }
 
-        self.current_audio_pos_text
+        self.current_audio_pos_timestamp
             .set_label(ProgressBar::format_duration(&self.current_audio_pos).as_str());
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
