@@ -69,6 +69,8 @@ impl ProgressBar {
             self.current_audio_pos = pos;
         }
 
+        self.current_audio_pos_text
+            .set_label(ProgressBar::format_duration(&self.current_audio_pos).as_str());
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
     }
