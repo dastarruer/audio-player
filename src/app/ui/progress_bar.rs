@@ -1,10 +1,10 @@
 use std::{sync::mpsc, time::Duration};
 
 use fltk::{
-    enums::{Align, Color, Font, FrameType},
+    enums::{Font, FrameType},
     frame,
     misc::Progress,
-    output::Output,
+    output,
     prelude::WidgetExt,
 };
 
@@ -19,7 +19,7 @@ pub struct ProgressBar {
     current_audio_pos: Duration,
 
     /// Display the audio's current position to the user
-    current_audio_pos_timestamp: Output,
+    current_audio_pos_timestamp: output::Output,
 }
 
 impl ProgressBar {
@@ -37,30 +37,12 @@ impl ProgressBar {
             .with_pos(progress_bar_x, PROGRESS_BAR_Y)
             .with_size(WIDTH, 5);
 
-        const TIMESTAMP_PADDING: i32 = 10;
-        const TIMESTAMP_WIDTH: i32 = 30;
-        const TIMESTAMP_HEIGHT: i32 = 1;
-
-        // Create the timestamp to show the viewer the total duration of the audio
-        frame::Frame::default()
-            .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
-            .right_of(&progress_bar, TIMESTAMP_PADDING)
-            .center_y(&progress_bar)
-            .with_label(&ProgressBar::format_duration(&audio_length));
-
-        // Create the timestamp to show the viewer the current audio position
-        let default_timestamp = "0:00";
-        let mut current_audio_pos_timestamp = Output::default()
-            .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
-            .left_of(&progress_bar, -25)
-            .center_y(&progress_bar)
-            .with_label(default_timestamp);
-        current_audio_pos_timestamp.set_label_font(Font::Helvetica);
-        current_audio_pos_timestamp.set_frame(FrameType::NoBox);
-
         // Set the range to be from 0 - audio length so progress bar value can simply be set to current position without doing any calculations
         progress_bar.set_minimum(0.0);
         progress_bar.set_maximum(audio_length.as_millis() as f64);
+
+        let (current_audio_pos_timestamp, _) =
+            ProgressBar::create_timestamps(&progress_bar, audio_length);
 
         ProgressBar {
             progress_bar,
@@ -78,13 +60,47 @@ impl ProgressBar {
         }
 
         self.current_audio_pos_timestamp
-            .set_label(&ProgressBar::format_duration(&self.current_audio_pos));
+            .set_label(&ProgressBar::format_duration(self.current_audio_pos));
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
     }
 
+    /// Create the timestamps on both sides of the progress bar.
+    fn create_timestamps(
+        progress_bar: &Progress,
+        audio_length: Duration,
+    ) -> (output::Output, frame::Frame) {
+        const TIMESTAMP_PADDING: i32 = 10;
+        const TIMESTAMP_WIDTH: i32 = 30;
+        const TIMESTAMP_HEIGHT: i32 = 1;
+
+        // Create the timestamp to show the viewer the total duration of the audio
+        // Use Frame here because the label will never change
+        let foramtted_duration = &ProgressBar::format_duration(audio_length);
+        let mut total_audio_duration_timestamp = frame::Frame::default()
+            .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
+            .right_of(progress_bar, TIMESTAMP_PADDING)
+            .center_y(progress_bar)
+            .with_label(foramtted_duration);
+        total_audio_duration_timestamp.set_label_font(Font::Helvetica);
+        total_audio_duration_timestamp.set_frame(FrameType::NoBox);
+
+        // Create the timestamp to show the viewer the current audio position
+        // Use Output instead here so that the label can be updated on the fly
+        let default_timestamp = "0:00";
+        let mut current_audio_pos_timestamp = output::Output::default()
+            .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
+            .left_of(progress_bar, -25)
+            .center_y(progress_bar)
+            .with_label(default_timestamp);
+        current_audio_pos_timestamp.set_label_font(Font::Helvetica);
+        current_audio_pos_timestamp.set_frame(FrameType::NoBox);
+
+        (current_audio_pos_timestamp, total_audio_duration_timestamp)
+    }
+
     /// Format a Duration as mm:ss
-    fn format_duration(duration: &Duration) -> String {
+    fn format_duration(duration: Duration) -> String {
         let total_secs = duration.as_secs();
 
         let hours = total_secs / 3600;
@@ -107,15 +123,15 @@ mod test {
     #[test]
     fn test_format_duration_minutes() {
         let duration = Duration::from_secs(61);
-        assert_eq!("1:01", ProgressBar::format_duration(&duration));
+        assert_eq!("1:01", ProgressBar::format_duration(duration));
 
         let duration = Duration::from_secs(158);
-        assert_eq!("2:38", ProgressBar::format_duration(&duration));
+        assert_eq!("2:38", ProgressBar::format_duration(duration));
     }
 
     #[test]
     fn test_format_duration_hours() {
         let duration = Duration::from_secs(3601);
-        assert_eq!("1:00:01", ProgressBar::format_duration(&duration));
+        assert_eq!("1:00:01", ProgressBar::format_duration(duration));
     }
 }
