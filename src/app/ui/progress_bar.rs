@@ -78,12 +78,14 @@ impl ProgressBar {
         let secs = duration.as_secs();
         let minutes = secs / 60;
         let seconds = secs % 60;
-        let hours = minutes / 60;
 
-        if hours > 0 {
-            return format!("{}:{}:{}", hours, minutes, seconds);
-        } else {
+        // If minutes has two digits
+        if minutes >= 10 {
+            // Return as is
             return format!("{}:{}", minutes, seconds);
+        } else {
+            // If minutes has only one digit, add a leading zero
+            return format!("{}:0{}", minutes, seconds);
         }
     }
 }
