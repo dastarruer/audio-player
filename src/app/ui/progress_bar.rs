@@ -69,28 +69,29 @@ impl ProgressBar {
     fn create_timestamps(
         progress_bar: &Progress,
         audio_length: Duration,
-    ) -> (output::Output, frame::Frame) {
-        const TIMESTAMP_PADDING: i32 = 10;
+    ) -> (output::Output, output::Output) {
         const TIMESTAMP_WIDTH: i32 = 30;
         const TIMESTAMP_HEIGHT: i32 = 1;
 
+        // The padding is different for both because god willed it to be
+        const CURRENT_AUDIO_POS_TIMESTAMP_PADDING: i32 = -25;
+        const TOTAL_AUDIO_DURATION_TIMESTAMP_PADDING: i32 = 40;
+
         // Create the timestamp to show the viewer the total duration of the audio
-        // Use Frame here because the label will never change
         let foramtted_duration = &ProgressBar::format_duration(audio_length);
-        let mut total_audio_duration_timestamp = frame::Frame::default()
+        let mut total_audio_duration_timestamp = output::Output::default()
             .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
-            .right_of(progress_bar, TIMESTAMP_PADDING)
+            .right_of(progress_bar, TOTAL_AUDIO_DURATION_TIMESTAMP_PADDING)
             .center_y(progress_bar)
             .with_label(foramtted_duration);
         total_audio_duration_timestamp.set_label_font(Font::Helvetica);
         total_audio_duration_timestamp.set_frame(FrameType::NoBox);
 
         // Create the timestamp to show the viewer the current audio position
-        // Use Output instead here so that the label can be updated on the fly
         let default_timestamp = "0:00";
         let mut current_audio_pos_timestamp = output::Output::default()
             .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
-            .left_of(progress_bar, -25)
+            .left_of(progress_bar, CURRENT_AUDIO_POS_TIMESTAMP_PADDING)
             .center_y(progress_bar)
             .with_label(default_timestamp);
         current_audio_pos_timestamp.set_label_font(Font::Helvetica);
