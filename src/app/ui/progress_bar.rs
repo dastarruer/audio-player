@@ -1,4 +1,4 @@
-use std::{sync::mpsc, time::Duration};
+use std::{fmt::format, sync::mpsc, time::Duration};
 
 use fltk::{frame, misc::Progress, prelude::WidgetExt};
 
@@ -75,18 +75,18 @@ impl ProgressBar {
 
     /// Format a Duration as mm:ss
     fn format_duration(duration: &Duration) -> String {
-        let secs = duration.as_secs();
-        let minutes = secs / 60;
-        let seconds = secs % 60;
+        let total_secs = duration.as_secs();
 
-        // If seconds has two digits
-        if seconds >= 10 {
-            // Return as is
-            return format!("{}:{}", minutes, seconds);
-        } else {
-            // If seconds has only one digit, add a leading zero
-            return format!("{}:0{}", minutes, seconds);
+        let hours = total_secs / 3600;
+        let rem_secs = total_secs % 3600;
+
+        let minutes = rem_secs / 60;
+        let seconds = rem_secs % 60;
+
+        if hours > 0 {
+            return format!("{}:{:02}:{:02}", hours, minutes, seconds);
         }
+        format!("{}:{:02}", minutes, seconds)
     }
 }
 
