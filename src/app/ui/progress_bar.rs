@@ -78,7 +78,29 @@ impl ProgressBar {
         let secs = duration.as_secs();
         let minutes = secs / 60;
         let seconds = secs % 60;
+        let hours = minutes / 60;
 
-        format!("{}:{}", minutes, seconds)
+        if hours > 0 {
+            return format!("{}:{}:{}", hours, minutes, seconds);
+        } else {
+            return format!("{}:{}", minutes, seconds);
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_format_duration_minutes() {
+        let duration = Duration::from_secs(61);
+        assert_eq!("1:01", ProgressBar::format_duration(&duration));
+    }
+
+    #[test]
+    fn test_format_duration_hours() {
+        let duration = Duration::from_secs(3601);
+        assert_eq!("1:00:01", ProgressBar::format_duration(&duration));
     }
 }
