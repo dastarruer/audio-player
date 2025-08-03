@@ -44,7 +44,7 @@ impl ProgressBar {
 
         // Create the timestamp to show the viewer the current audio position
         let default_timestamp = "0:00";
-        let current_audio_pos_text = frame::Frame::default()
+        let current_audio_pos_timestamp = frame::Frame::default()
             .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
             .left_of(&progress_bar, TIMESTAMP_PADDING)
             .center_y(&progress_bar)
@@ -58,7 +58,7 @@ impl ProgressBar {
             progress_bar,
             audio_pos_receiver,
             current_audio_pos: Duration::from_secs(0),
-            current_audio_pos_timestamp: current_audio_pos_text,
+            current_audio_pos_timestamp,
         }
     }
 
@@ -70,7 +70,7 @@ impl ProgressBar {
         }
 
         self.current_audio_pos_timestamp
-            .set_label(ProgressBar::format_duration(&self.current_audio_pos).as_str());
+            .set_label(&ProgressBar::format_duration(&self.current_audio_pos));
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
     }
