@@ -1,6 +1,6 @@
 use std::{sync::mpsc, time::Duration};
 
-use fltk::{misc::Progress, prelude::WidgetExt};
+use fltk::{frame, misc::Progress, prelude::WidgetExt};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
@@ -11,6 +11,9 @@ pub struct ProgressBar {
     audio_pos_receiver: mpsc::Receiver<Duration>,
 
     current_audio_pos: Duration,
+
+    // Display the audio's current position to the user
+    // current_audio_pos_text: frame::Frame,
 }
 
 impl ProgressBar {
@@ -28,6 +31,13 @@ impl ProgressBar {
             .with_pos(progress_bar_x, PROGRESS_BAR_Y)
             .with_size(WIDTH, 5);
 
+        // Create the timestamp to show the viewer the total duration of the audio
+        frame::Frame::default()
+            .with_size(30, 1)
+            .right_of(&progress_bar, 10)
+            .center_y(&progress_bar)
+            .with_label(&ProgressBar::format_duration(&audio_length));
+
         // Set the range to be from 0 - audio length so progress bar value can simply be set to current position without doing any calculations
         progress_bar.set_minimum(0.0);
         progress_bar.set_maximum(audio_length.as_millis() as f64);
@@ -36,6 +46,7 @@ impl ProgressBar {
             progress_bar,
             audio_pos_receiver,
             current_audio_pos: Duration::from_secs(0),
+            // current_audio_pos_text,
         }
     }
 
@@ -48,5 +59,14 @@ impl ProgressBar {
 
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
+    }
+
+    /// Format a Duration as mm:ss
+    fn format_duration(duration: &Duration) -> String {
+        let secs = duration.as_secs();
+        let minutes = secs / 60;
+        let seconds = secs % 60;
+
+        format!("{}:{}", minutes, seconds)
     }
 }
