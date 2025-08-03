@@ -1,4 +1,4 @@
-use std::{fmt::format, sync::mpsc, time::Duration};
+use std::{sync::mpsc, time::Duration};
 
 use fltk::{frame, misc::Progress, prelude::WidgetExt};
 
