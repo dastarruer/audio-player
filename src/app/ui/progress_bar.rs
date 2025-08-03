@@ -12,8 +12,8 @@ pub struct ProgressBar {
 
     current_audio_pos: Duration,
 
-    // Display the audio's current position to the user
-    // current_audio_pos_text: frame::Frame,
+    /// Display the audio's current position to the user
+    current_audio_pos_text: frame::Frame,
 }
 
 impl ProgressBar {
@@ -31,12 +31,24 @@ impl ProgressBar {
             .with_pos(progress_bar_x, PROGRESS_BAR_Y)
             .with_size(WIDTH, 5);
 
+        const TIMESTAMP_PADDING: i32 = 10;
+        const TIMESTAMP_WIDTH: i32 = 30;
+        const TIMESTAMP_HEIGHT: i32 = 1;
+
         // Create the timestamp to show the viewer the total duration of the audio
         frame::Frame::default()
-            .with_size(30, 1)
-            .right_of(&progress_bar, 10)
+            .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
+            .right_of(&progress_bar, TIMESTAMP_PADDING)
             .center_y(&progress_bar)
             .with_label(&ProgressBar::format_duration(&audio_length));
+
+        // Create the timestamp to show the viewer the current audio position
+        let default_timestamp = "0:00";
+        let current_audio_pos_text = frame::Frame::default()
+            .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
+            .left_of(&progress_bar, TIMESTAMP_PADDING)
+            .center_y(&progress_bar)
+            .with_label(default_timestamp);
 
         // Set the range to be from 0 - audio length so progress bar value can simply be set to current position without doing any calculations
         progress_bar.set_minimum(0.0);
@@ -46,7 +58,7 @@ impl ProgressBar {
             progress_bar,
             audio_pos_receiver,
             current_audio_pos: Duration::from_secs(0),
-            // current_audio_pos_text,
+            current_audio_pos_text,
         }
     }
 
