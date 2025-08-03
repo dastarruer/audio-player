@@ -79,12 +79,12 @@ impl ProgressBar {
         let minutes = secs / 60;
         let seconds = secs % 60;
 
-        // If minutes has two digits
-        if minutes >= 10 {
+        // If seconds has two digits
+        if seconds >= 10 {
             // Return as is
             return format!("{}:{}", minutes, seconds);
         } else {
-            // If minutes has only one digit, add a leading zero
+            // If seconds has only one digit, add a leading zero
             return format!("{}:0{}", minutes, seconds);
         }
     }
@@ -98,6 +98,9 @@ mod test {
     fn test_format_duration_minutes() {
         let duration = Duration::from_secs(61);
         assert_eq!("1:01", ProgressBar::format_duration(&duration));
+
+        let duration = Duration::from_secs(158);
+        assert_eq!("2:38", ProgressBar::format_duration(&duration));
     }
 
     #[test]
