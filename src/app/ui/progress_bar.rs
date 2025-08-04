@@ -41,6 +41,7 @@ impl ProgressBar {
         // Set the range to be from 0 - audio length so progress bar value can simply be set to current position without doing any calculations
         progress_bar.set_minimum(0.0);
         progress_bar.set_maximum(audio_length.as_millis() as f64);
+        progress_bar.set_value(0.0);
 
         let (current_audio_pos_timestamp, _) =
             ProgressBar::create_timestamps(&progress_bar, audio_length);
@@ -64,6 +65,7 @@ impl ProgressBar {
                 self.current_audio_pos = pos;
             }
         }
+        println!("{}", self.progress_bar.x());
 
         self.current_audio_pos_timestamp
             .set_label(&ProgressBar::format_duration(self.current_audio_pos));
@@ -121,24 +123,54 @@ impl ProgressBar {
         }
         format!("{}:{:02}", minutes, seconds)
     }
+
+    /// Get the x position of the progress bar knob
+    fn knob_x(&self) -> i32 {
+        // For now progress = 0
+        // TODO: Remove this comment
+        let progress = 0;
+
+
+        // 400-250 = 150
+        // 250/2 = 125
+        // 150-125 = 25
+        // TODO: Remove this constant
+        const WIN_WIDTH:i32 = 400;
+
+        (WIN_WIDTH - self.progress_bar.width()) - (self.progress_bar.width() / 2) + progress
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    mod format_duration {
+        use super::super::*;
 
-    #[test]
-    fn test_format_duration_minutes() {
-        let duration = Duration::from_secs(61);
-        assert_eq!("1:01", ProgressBar::format_duration(duration));
+        #[test]
+        fn test_format_duration_minutes() {
+            let duration = Duration::from_secs(61);
+            assert_eq!("1:01", ProgressBar::format_duration(duration));
 
-        let duration = Duration::from_secs(158);
-        assert_eq!("2:38", ProgressBar::format_duration(duration));
+            let duration = Duration::from_secs(158);
+            assert_eq!("2:38", ProgressBar::format_duration(duration));
+        }
+
+        #[test]
+        fn test_format_duration_hours() {
+            let duration = Duration::from_secs(3601);
+            assert_eq!("1:00:01", ProgressBar::format_duration(duration));
+        }
     }
 
-    #[test]
-    fn test_format_duration_hours() {
-        let duration = Duration::from_secs(3601);
-        assert_eq!("1:00:01", ProgressBar::format_duration(duration));
+    mod knob_x {
+        use super::super::*;
+
+        #[test]
+        fn test_0_progress() {
+            let (_, rx) = mpsc::channel();
+            let progress = ProgressBar::new(400, Duration::from_secs(15), rx);
+
+            assert_eq!(progress.knob_x(), 25);
+        }
     }
 }
