@@ -126,16 +126,13 @@ impl ProgressBar {
 
     /// Get the x position of the progress bar knob
     fn knob_x(&self) -> i32 {
-        // For now progress = 0
-        // TODO: Remove this comment
-        let progress = 0;
-
+        let progress = self.progress_bar.value() as i32;
 
         // 400-250 = 150
         // 250/2 = 125
         // 150-125 = 25
         // TODO: Remove this constant
-        const WIN_WIDTH:i32 = 400;
+        const WIN_WIDTH: i32 = 400;
 
         (WIN_WIDTH - self.progress_bar.width()) - (self.progress_bar.width() / 2) + progress
     }
