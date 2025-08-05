@@ -71,6 +71,7 @@ impl ProgressBar {
         // Draw the knob first so that it is drawn over the progress bar
         let diameter = 10;
         let knob_x = self.knob_x();
+        println!("{}", knob_x);
         let knob_y = self.progress_bar.y() - 2;
         self.progress_bar.draw(move |_| {
             draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
@@ -199,6 +200,33 @@ mod test {
             progress.progress_bar.set_value(25.0);
 
             assert_eq!(progress.knob_x(), 137);
+        }
+
+        #[test]
+        fn test_50_progress() {
+            let (_, rx) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
+            progress.progress_bar.set_value(50.0);
+
+            assert_eq!(progress.knob_x(), 200);
+        }
+
+        #[test]
+        fn test_75_progress() {
+            let (_, rx) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
+            progress.progress_bar.set_value(75.0);
+
+            assert_eq!(progress.knob_x(), 262);
+        }
+
+        #[test]
+        fn test_100_progress() {
+            let (_, rx) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
+            progress.progress_bar.set_value(100.0);
+
+            assert_eq!(progress.knob_x(), 325);
         }
     }
 
