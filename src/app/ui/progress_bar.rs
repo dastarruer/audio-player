@@ -70,7 +70,7 @@ impl ProgressBar {
 
         // Draw the knob first so that it is drawn over the progress bar
         let diameter = 10;
-        let knob_x = self.knob_x(diameter);
+        let knob_x = self.knob_x();
         let knob_y = self.progress_bar.y() - 2;
         self.progress_bar.draw(move |_| {
             draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
@@ -148,18 +148,13 @@ impl ProgressBar {
     }
 
     /// Get the x position of the progress bar knob
-    fn knob_x(&self, diameter: i32) -> i32 {
-        // TODO: Remove this constant
-        const WIN_WIDTH: f64 = 400.0;
-
+    fn knob_x(&self) -> i32 {
         let progress = self.progress_as_decimal();
         let progress_bar_width = self.progress_bar.width() as f64;
 
-        let bar_start_x = ((WIN_WIDTH - progress_bar_width) - (progress_bar_width / 2.0)) as i32;
         let progress_offset = (progress * progress_bar_width) as i32;
-        let knob_center = diameter / 2;
 
-        bar_start_x + progress_offset + knob_center
+        self.progress_bar.x() + progress_offset
     }
 }
 
@@ -187,14 +182,14 @@ mod test {
     mod knob_x {
         use super::super::*;
 
-        const DIAMETER: i32 = 50;
+        // const DIAMETER: i32 = 10;
 
         #[test]
         fn test_0_progress() {
             let (_, rx) = mpsc::channel();
             let progress = ProgressBar::new(400, Duration::from_secs(15), rx);
 
-            assert_eq!(progress.knob_x(DIAMETER), 50);
+            assert_eq!(progress.knob_x(), 75);
         }
 
         #[test]
@@ -203,7 +198,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
             progress.progress_bar.set_value(25.0);
 
-            assert_eq!(progress.knob_x(DIAMETER), 112);
+            assert_eq!(progress.knob_x(), 137);
         }
     }
 
