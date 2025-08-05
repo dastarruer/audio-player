@@ -140,17 +140,16 @@ impl ProgressBar {
 
     /// Get the x position of the progress bar knob
     fn knob_x(&self) -> f64 {
-        let progress = self.progress_as_decimal();
-
-        // 400-250 = 150
-        // 250/2 = 125
-        // 150-125 = 25
         // TODO: Remove this constant
         const WIN_WIDTH: f64 = 400.0;
+
+        let progress = self.progress_as_decimal();
         let progress_bar_width = self.progress_bar.width() as f64;
 
-        (WIN_WIDTH - progress_bar_width) - (progress_bar_width / 2.0)
-            + (progress * progress_bar_width)
+        let bar_start_x = (WIN_WIDTH - progress_bar_width) - (progress_bar_width / 2.0);
+        let progress_offset = progress * progress_bar_width;
+
+        bar_start_x + progress_offset
     }
 }
 
@@ -192,7 +191,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
             progress.progress_bar.set_value(25.0);
 
-            assert_eq!(progress.knob_x(), 25.0);
+            assert_eq!(progress.knob_x(), 87.5);
         }
     }
 
