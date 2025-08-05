@@ -68,17 +68,18 @@ impl ProgressBar {
             }
         }
 
+        // Draw the knob first so that it is drawn over the progress bar
+        let diameter = 10;
+        let knob_x = self.knob_x(diameter);
+        let knob_y = self.progress_bar.y() - 2;
+        self.progress_bar.draw(move |_| {
+            draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
+        });
+
         self.current_audio_pos_timestamp
             .set_label(&ProgressBar::format_duration(self.current_audio_pos));
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
-
-        let diameter = 50;
-        let knob_x = self.knob_x(diameter);
-        let knob_y = self.progress_bar.y() - 50;
-        self.progress_bar.draw(move |_| {
-            draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
-        });
     }
 
     /// Create the timestamps on both sides of the progress bar.
