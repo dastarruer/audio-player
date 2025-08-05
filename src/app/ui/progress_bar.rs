@@ -1,10 +1,12 @@
 use std::{sync::mpsc, time::Duration};
 
 use fltk::{
-    enums::{Font, FrameType},
+    draw,
+    enums::{Color, Font, FrameType},
+    frame::Frame,
     misc::Progress,
     output,
-    prelude::WidgetExt,
+    prelude::{WidgetBase, WidgetExt},
 };
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
@@ -65,12 +67,18 @@ impl ProgressBar {
                 self.current_audio_pos = pos;
             }
         }
-        println!("{}", self.progress_bar.x());
 
         self.current_audio_pos_timestamp
             .set_label(&ProgressBar::format_duration(self.current_audio_pos));
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
+
+        let diameter = 50;
+        let knob_x = self.knob_x(diameter);
+        let knob_y = self.progress_bar.y() - 50;
+        self.progress_bar.draw(move |_| {
+            draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
+        });
     }
 
     /// Create the timestamps on both sides of the progress bar.
@@ -139,17 +147,18 @@ impl ProgressBar {
     }
 
     /// Get the x position of the progress bar knob
-    fn knob_x(&self) -> f64 {
+    fn knob_x(&self, diameter: i32) -> i32 {
         // TODO: Remove this constant
         const WIN_WIDTH: f64 = 400.0;
 
         let progress = self.progress_as_decimal();
         let progress_bar_width = self.progress_bar.width() as f64;
 
-        let bar_start_x = (WIN_WIDTH - progress_bar_width) - (progress_bar_width / 2.0);
-        let progress_offset = progress * progress_bar_width;
+        let bar_start_x = ((WIN_WIDTH - progress_bar_width) - (progress_bar_width / 2.0)) as i32;
+        let progress_offset = (progress * progress_bar_width) as i32;
+        let knob_center = diameter / 2;
 
-        bar_start_x + progress_offset
+        bar_start_x + progress_offset + knob_center
     }
 }
 
@@ -177,12 +186,14 @@ mod test {
     mod knob_x {
         use super::super::*;
 
+        const DIAMETER: i32 = 50;
+
         #[test]
         fn test_0_progress() {
             let (_, rx) = mpsc::channel();
             let progress = ProgressBar::new(400, Duration::from_secs(15), rx);
 
-            assert_eq!(progress.knob_x(), 25.0);
+            assert_eq!(progress.knob_x(DIAMETER), 50);
         }
 
         #[test]
@@ -191,7 +202,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
             progress.progress_bar.set_value(25.0);
 
-            assert_eq!(progress.knob_x(), 87.5);
+            assert_eq!(progress.knob_x(DIAMETER), 112);
         }
     }
 
