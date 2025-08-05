@@ -3,7 +3,6 @@ use std::{sync::mpsc, time::Duration};
 use fltk::{
     draw,
     enums::{Color, Font, FrameType},
-    frame::Frame,
     misc::Progress,
     output,
     prelude::{WidgetBase, WidgetExt},
