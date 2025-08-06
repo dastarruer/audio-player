@@ -1,11 +1,7 @@
 use std::{sync::mpsc, time::Duration};
 
 use fltk::{
-    draw,
-    enums::{Color, Font, FrameType},
-    misc::Progress,
-    output,
-    prelude::{WidgetBase, WidgetExt},
+    draw, enums::{Color, Font, FrameType}, frame::Frame, misc::Progress, output, prelude::{WidgetBase, WidgetExt}
 };
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
@@ -22,6 +18,8 @@ pub struct ProgressBar {
 
     /// Display the audio's current position to the user
     current_audio_pos_timestamp: output::Output,
+
+    overlay: Frame,
 }
 
 impl ProgressBar {
@@ -47,12 +45,15 @@ impl ProgressBar {
         let (current_audio_pos_timestamp, _) =
             ProgressBar::create_timestamps(&progress_bar, audio_length);
 
+        let overlay = Frame::new(0, 0, 400, 300, "");
+
         ProgressBar {
             progress_bar,
             audio_pos_receiver,
             current_audio_pos: Duration::from_secs(0),
             audio_length,
             current_audio_pos_timestamp,
+            overlay,
         }
     }
 
@@ -72,7 +73,7 @@ impl ProgressBar {
         let knob_x = self.knob_x();
         println!("{}", knob_x);
         let knob_y = self.progress_bar.y() - 2;
-        self.progress_bar.draw(move |_| {
+        self.overlay.draw(move |_| {
             draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
         });
 
@@ -80,6 +81,8 @@ impl ProgressBar {
             .set_label(&ProgressBar::format_duration(self.current_audio_pos));
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
+
+        self.overlay.redraw();
     }
 
     /// Create the timestamps on both sides of the progress bar.
@@ -139,7 +142,6 @@ impl ProgressBar {
         let progress = (self.current_audio_pos.as_millis() as f64)
             / (self.audio_length.as_millis() as f64) as f64;
         let progress_bar_width = self.progress_bar.width() as f64;
-
         let progress_offset = (progress * progress_bar_width) as i32;
 
         self.progress_bar.x() + progress_offset
