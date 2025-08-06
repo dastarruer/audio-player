@@ -1,7 +1,12 @@
 use std::{sync::mpsc, time::Duration};
 
 use fltk::{
-    draw, enums::{Color, Font, FrameType}, frame::Frame, misc::Progress, output, prelude::{WidgetBase, WidgetExt}
+    draw,
+    enums::{Color, Font, FrameType},
+    frame::Frame,
+    misc::Progress,
+    output,
+    prelude::{WidgetBase, WidgetExt},
 };
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
