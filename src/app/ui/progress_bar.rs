@@ -79,7 +79,7 @@ impl ProgressBar {
         let knob_x = self.knob_x();
         let knob_y = self.progress_bar.y() - 2;
         self.knob_overlay.draw(move |_| {
-            draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
+            draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
         });
 
         self.current_audio_pos_timestamp
