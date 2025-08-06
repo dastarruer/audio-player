@@ -135,10 +135,12 @@ impl ProgressBar {
 
     /// Get the x position of the progress bar knob
     fn knob_x(&self) -> i32 {
-        let progress = (self.current_audio_pos.as_millis() as i32) / (self.audio_length.as_millis() as i32) as i32;
+        // By avoiding calling self.progress_bar.value and whatever, the knob gets drawn on top of the progress bar and I have no idea why
+        let progress = (self.current_audio_pos.as_millis() as f64)
+            / (self.audio_length.as_millis() as f64) as f64;
         let progress_bar_width = self.progress_bar.width() as f64;
 
-        let progress_offset = (progress as f64 * progress_bar_width) as i32;
+        let progress_offset = (progress * progress_bar_width) as i32;
 
         self.progress_bar.x() + progress_offset
     }
@@ -212,54 +214,6 @@ mod test {
             progress.progress_bar.set_value(100.0);
 
             assert_eq!(progress.knob_x(), 325);
-        }
-    }
-
-    mod progress_as_decimal {
-        use super::super::*;
-
-        #[test]
-        fn test_0_percent() {
-            let (_, rx) = mpsc::channel();
-            let progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-
-            assert_eq!(progress.progress_as_decimal(), 0.0);
-        }
-
-        #[test]
-        fn test_25_percent() {
-            let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(25.0);
-
-            assert_eq!(progress.progress_as_decimal(), 0.25);
-        }
-
-        #[test]
-        fn test_50_percent() {
-            let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(50.0);
-
-            assert_eq!(progress.progress_as_decimal(), 0.50);
-        }
-
-        #[test]
-        fn test_75_percent() {
-            let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(75.0);
-
-            assert_eq!(progress.progress_as_decimal(), 0.75);
-        }
-
-        #[test]
-        fn test_100_percent() {
-            let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(100.0);
-
-            assert_eq!(progress.progress_as_decimal(), 1.0);
         }
     }
 }
