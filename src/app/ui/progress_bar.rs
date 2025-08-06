@@ -19,7 +19,8 @@ pub struct ProgressBar {
     /// Display the audio's current position to the user
     current_audio_pos_timestamp: output::Output,
 
-    overlay: Frame,
+    /// The overlay that is used to draw the knob on top of the progress bar
+    knob_overlay: Frame,
 }
 
 impl ProgressBar {
@@ -45,7 +46,7 @@ impl ProgressBar {
         let (current_audio_pos_timestamp, _) =
             ProgressBar::create_timestamps(&progress_bar, audio_length);
 
-        let overlay = Frame::new(0, 0, 400, 300, "");
+        let knob_overlay = Frame::new(0, 0, 400, 300, "");
 
         ProgressBar {
             progress_bar,
@@ -53,7 +54,7 @@ impl ProgressBar {
             current_audio_pos: Duration::from_secs(0),
             audio_length,
             current_audio_pos_timestamp,
-            overlay,
+            knob_overlay,
         }
     }
 
@@ -73,7 +74,7 @@ impl ProgressBar {
         let knob_x = self.knob_x();
         println!("{}", knob_x);
         let knob_y = self.progress_bar.y() - 2;
-        self.overlay.draw(move |_| {
+        self.knob_overlay.draw(move |_| {
             draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
         });
 
@@ -82,7 +83,7 @@ impl ProgressBar {
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
 
-        self.overlay.redraw();
+        self.knob_overlay.redraw();
     }
 
     /// Create the timestamps on both sides of the progress bar.
