@@ -133,26 +133,12 @@ impl ProgressBar {
         format!("{}:{:02}", minutes, seconds)
     }
 
-    /// Get the progress as a decimal percentage (0.0-1.0)
-    fn progress_as_decimal(&self) -> f64 {
-        let max = self.progress_bar.maximum();
-        let value = self.progress_bar.value();
-
-        // Ensure division by 0 never occurs
-        if max == 0.0 {
-            return 0.0;
-        }
-
-        // Divide value by max, and multiply by 1000 because then all the tests decide to pass
-        (value / max) * 1000.0
-    }
-
     /// Get the x position of the progress bar knob
     fn knob_x(&self) -> i32 {
-        let progress = self.progress_as_decimal();
+        let progress = (self.current_audio_pos.as_millis() as i32) / (self.audio_length.as_millis() as i32) as i32;
         let progress_bar_width = self.progress_bar.width() as f64;
 
-        let progress_offset = (progress * progress_bar_width) as i32;
+        let progress_offset = (progress as f64 * progress_bar_width) as i32;
 
         self.progress_bar.x() + progress_offset
     }
