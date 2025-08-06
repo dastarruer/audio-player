@@ -83,6 +83,7 @@ impl ProgressBar {
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
 
+        // Redraw knob so it appears above the progress bar
         self.knob_overlay.redraw();
     }
 
