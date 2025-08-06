@@ -187,7 +187,7 @@ mod test {
         fn test_25_progress() {
             let (_, rx) = mpsc::channel();
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(25.0);
+            progress.current_audio_pos = Duration::from_secs(25);
 
             assert_eq!(progress.knob_x(), 137);
         }
@@ -196,7 +196,7 @@ mod test {
         fn test_50_progress() {
             let (_, rx) = mpsc::channel();
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(50.0);
+            progress.current_audio_pos = Duration::from_secs(50);
 
             assert_eq!(progress.knob_x(), 200);
         }
@@ -205,7 +205,7 @@ mod test {
         fn test_75_progress() {
             let (_, rx) = mpsc::channel();
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(75.0);
+            progress.current_audio_pos = Duration::from_secs(75);
 
             assert_eq!(progress.knob_x(), 262);
         }
@@ -214,7 +214,7 @@ mod test {
         fn test_100_progress() {
             let (_, rx) = mpsc::channel();
             let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.progress_bar.set_value(100.0);
+            progress.current_audio_pos = Duration::from_secs(100);
 
             assert_eq!(progress.knob_x(), 325);
         }
