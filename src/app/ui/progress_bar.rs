@@ -77,7 +77,6 @@ impl ProgressBar {
         // Draw the knob first so that it is drawn over the progress bar
         let diameter = 10;
         let knob_x = self.knob_x();
-        println!("{}", knob_x);
         let knob_y = self.progress_bar.y() - 2;
         self.knob_overlay.draw(move |_| {
             draw::draw_circle_fill(knob_x, knob_y, diameter, Color::Blue);
