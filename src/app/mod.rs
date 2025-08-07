@@ -105,11 +105,12 @@ impl AudioApp {
         audio_length: Duration,
         audio_pos_receiver: mpsc::Receiver<Duration>,
     ) {
-        self.playback_buttons = Some(PlaybackButtons::new(AudioApp::WIN_WIDTH, sender));
+        self.playback_buttons = Some(PlaybackButtons::new(AudioApp::WIN_WIDTH, sender.clone()));
         self.progress_bar = Some(ProgressBar::new(
             AudioApp::WIN_WIDTH,
             audio_length,
             audio_pos_receiver,
+            sender,
         ));
     }
 

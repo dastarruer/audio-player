@@ -1,8 +1,16 @@
 use std::{clone, sync::mpsc, time::Duration};
 
 use fltk::{
-    app::{self, MouseButton}, draw, enums::{Color, Event, Font, FrameType}, frame::Frame, misc::Progress, output, prelude::{WidgetBase, WidgetExt}
+    app::{self, MouseButton},
+    draw,
+    enums::{Color, Event, Font, FrameType},
+    frame::Frame,
+    misc::Progress,
+    output,
+    prelude::{WidgetBase, WidgetExt},
 };
+
+use crate::app::Message;
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
@@ -21,6 +29,9 @@ pub struct ProgressBar {
 
     /// The overlay that is used to draw the knob on top of the progress bar
     knob_overlay: Frame,
+
+    /// The sender that will be used to rewind or fast-forward the audio when the progress bar is clicked
+    audio_sender: mpsc::Sender<Message>,
 }
 
 impl ProgressBar {
@@ -28,6 +39,7 @@ impl ProgressBar {
         win_width: i32,
         audio_length: Duration,
         audio_pos_receiver: mpsc::Receiver<Duration>,
+        audio_sender: mpsc::Sender<Message>,
     ) -> ProgressBar {
         const WIDTH: i32 = 250;
         const PROGRESS_BAR_Y: i32 = 190;
@@ -55,6 +67,7 @@ impl ProgressBar {
             audio_length,
             current_audio_pos_timestamp,
             knob_overlay,
+            audio_sender,
         }
     }
 
@@ -75,6 +88,8 @@ impl ProgressBar {
 
         let mut knob_overlay_clone = self.knob_overlay.clone();
 
+        let audio_sender = self.audio_sender.clone();
+
         // Handle hovering over progress bar
         // TODO: Knob does not redraw if you keep hovering over it, pls fix
         self.knob_overlay.handle(move |_, event| match event {
@@ -91,11 +106,17 @@ impl ProgressBar {
                 true
             }
             Event::Push if app::event_mouse_button() == MouseButton::Left => {
-                println!("Clicked");
+                match audio_sender.send(Message::FastForward(Duration::from_secs(10))) {
+                    Ok(_) => (),
+                    Err(e) => eprintln!("Unable to seek to position: {}", e),
+                };
                 true
             }
             _ => false,
         });
+
+        // Draw the knob
+        self.knob_overlay.redraw();
 
         // Update the timestamp
         self.current_audio_pos_timestamp
@@ -104,9 +125,6 @@ impl ProgressBar {
         // Update the progress bar
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
-
-        // Draw the knob
-        self.knob_overlay.redraw();
     }
 
     /// Create the timestamps on both sides of the progress bar.
