@@ -51,7 +51,7 @@ impl ProgressBar {
         let (current_audio_pos_timestamp, _) =
             ProgressBar::create_timestamps(&progress_bar, audio_length);
 
-        let knob_overlay = Frame::new(progress_bar_x, PROGRESS_BAR_Y, WIDTH, 20, "");
+        let knob_overlay = Frame::new(progress_bar_x, PROGRESS_BAR_Y - 10, WIDTH, 20, "");
 
         ProgressBar {
             progress_bar,
@@ -87,13 +87,11 @@ impl ProgressBar {
                 knob_overlay_clone.draw(move |_| {
                     draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
                 });
-                println!("Enter");
                 true
             }
             Event::Leave => {
                 // Update the knob overlay's draw function to draw nothing
                 knob_overlay_clone.draw(move |_| {});
-                println!("Exit");
                 true
             }
             _ => false,
@@ -106,6 +104,9 @@ impl ProgressBar {
         // Update the progress bar
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
+
+        // Draw the knob
+        self.knob_overlay.redraw();
     }
 
     /// Create the timestamps on both sides of the progress bar.
