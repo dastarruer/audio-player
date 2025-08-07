@@ -180,9 +180,7 @@ impl ProgressBar {
 
     /// Get the x position of the progress bar knob
     fn knob_x(&self) -> i32 {
-        // By avoiding calling self.progress_bar.value and whatever, the knob gets drawn on top of the progress bar and I have no idea why
-        let progress = (self.current_audio_pos.as_millis() as f64)
-            / (self.audio_length.as_millis() as f64) as f64;
+        let progress = self.progress_bar.value() / self.progress_bar.maximum();
         let progress_bar_width = self.progress_bar.width() as f64;
         let progress_offset = (progress * progress_bar_width) as i32;
 
@@ -219,7 +217,8 @@ mod test {
         #[test]
         fn test_0_progress() {
             let (_, rx) = mpsc::channel();
-            let progress = ProgressBar::new(400, Duration::from_secs(15), rx);
+            let (tx, _) = mpsc::channel();
+            let progress = ProgressBar::new(400, Duration::from_secs(15), rx, tx);
 
             assert_eq!(progress.knob_x(), 75);
         }
@@ -227,8 +226,9 @@ mod test {
         #[test]
         fn test_25_progress() {
             let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.current_audio_pos = Duration::from_secs(25);
+            let (tx, _) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx, tx);
+            progress.progress_bar.set_value(25.0);
 
             assert_eq!(progress.knob_x(), 137);
         }
@@ -236,8 +236,9 @@ mod test {
         #[test]
         fn test_50_progress() {
             let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.current_audio_pos = Duration::from_secs(50);
+            let (tx, _) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx, tx);
+            progress.progress_bar.set_value(50.0);
 
             assert_eq!(progress.knob_x(), 200);
         }
@@ -245,8 +246,9 @@ mod test {
         #[test]
         fn test_75_progress() {
             let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.current_audio_pos = Duration::from_secs(75);
+            let (tx, _) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx, tx);
+            progress.progress_bar.set_value(75.0);
 
             assert_eq!(progress.knob_x(), 262);
         }
@@ -254,8 +256,9 @@ mod test {
         #[test]
         fn test_100_progress() {
             let (_, rx) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx);
-            progress.current_audio_pos = Duration::from_secs(100);
+            let (tx, _) = mpsc::channel();
+            let mut progress = ProgressBar::new(400, Duration::from_secs(100), rx, tx);
+            progress.progress_bar.set_value(100.0);
 
             assert_eq!(progress.knob_x(), 325);
         }
