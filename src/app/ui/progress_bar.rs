@@ -1,8 +1,8 @@
-use std::{sync::mpsc, time::Duration};
+use std::{clone, sync::mpsc, time::Duration};
 
 use fltk::{
     draw,
-    enums::{Color, Font, FrameType},
+    enums::{Color, Event, Font, FrameType},
     frame::Frame,
     misc::Progress,
     output,
@@ -51,7 +51,7 @@ impl ProgressBar {
         let (current_audio_pos_timestamp, _) =
             ProgressBar::create_timestamps(&progress_bar, audio_length);
 
-        let knob_overlay = Frame::new(0, 0, 400, 300, "");
+        let knob_overlay = Frame::new(progress_bar_x, PROGRESS_BAR_Y, WIDTH, 20, "");
 
         ProgressBar {
             progress_bar,
@@ -78,8 +78,25 @@ impl ProgressBar {
         let diameter = 10;
         let knob_x = self.knob_x();
         let knob_y = self.progress_bar.y() - 2;
+
+        // Update the knob overlay's draw function
         self.knob_overlay.draw(move |_| {
             draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
+        });
+
+        let mut knob_overlay_clone = self.knob_overlay.clone();
+        self.knob_overlay.handle(move |_, event| match event {
+            Event::Enter => {
+                knob_overlay_clone.show();
+                println!("Enter");
+                true
+            }
+            Event::Leave => {
+                knob_overlay_clone.hide();
+                println!("Exit");
+                true
+            }
+            _ => false,
         });
 
         self.current_audio_pos_timestamp
