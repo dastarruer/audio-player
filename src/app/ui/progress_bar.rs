@@ -81,6 +81,7 @@ impl ProgressBar {
         let mut knob_overlay_clone = self.knob_overlay.clone();
 
         // Handle hovering over progress bar
+        // TODO: Knob does not redraw if you keep hovering over it, pls fix
         self.knob_overlay.handle(move |_, event| match event {
             Event::Enter => {
                 // Update the knob overlay's draw function to draw the knob
