@@ -40,6 +40,7 @@
           rustToolchain
           pkg-config
           rust-analyzer
+          lldb # Rust debugger
 
           # rodio dependencies
           alsa-lib
