@@ -74,38 +74,38 @@ impl ProgressBar {
             }
         }
 
-        // Draw the knob first so that it is drawn over the progress bar
         let diameter = 10;
         let knob_x = self.knob_x();
         let knob_y = self.progress_bar.y() - 2;
 
-        // Update the knob overlay's draw function
-        self.knob_overlay.draw(move |_| {
-            draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
-        });
-
         let mut knob_overlay_clone = self.knob_overlay.clone();
+
+        // Handle hovering over progress bar
         self.knob_overlay.handle(move |_, event| match event {
             Event::Enter => {
-                knob_overlay_clone.show();
+                // Update the knob overlay's draw function to draw the knob
+                knob_overlay_clone.draw(move |_| {
+                    draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
+                });
                 println!("Enter");
                 true
             }
             Event::Leave => {
-                knob_overlay_clone.hide();
+                // Update the knob overlay's draw function to draw nothing
+                knob_overlay_clone.draw(move |_| {});
                 println!("Exit");
                 true
             }
             _ => false,
         });
 
+        // Update the timestamp
         self.current_audio_pos_timestamp
             .set_label(&ProgressBar::format_duration(self.current_audio_pos));
+
+        // Update the progress bar
         self.progress_bar
             .set_value(self.current_audio_pos.as_millis() as f64);
-
-        // Redraw knob so it appears above the progress bar
-        self.knob_overlay.redraw();
     }
 
     /// Create the timestamps on both sides of the progress bar.
