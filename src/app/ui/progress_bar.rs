@@ -1,12 +1,7 @@
 use std::{clone, sync::mpsc, time::Duration};
 
 use fltk::{
-    draw,
-    enums::{Color, Event, Font, FrameType},
-    frame::Frame,
-    misc::Progress,
-    output,
-    prelude::{WidgetBase, WidgetExt},
+    app::{self, MouseButton}, draw, enums::{Color, Event, Font, FrameType}, frame::Frame, misc::Progress, output, prelude::{WidgetBase, WidgetExt}
 };
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
@@ -93,6 +88,10 @@ impl ProgressBar {
             Event::Leave => {
                 // Update the knob overlay's draw function to draw nothing
                 knob_overlay_clone.draw(move |_| {});
+                true
+            }
+            Event::Push if app::event_mouse_button() == MouseButton::Left => {
+                println!("Clicked");
                 true
             }
             _ => false,
