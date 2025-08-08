@@ -115,13 +115,13 @@ impl ProgressBar {
                 true
             }
             Event::Push if app::event_mouse_button() == MouseButton::Left => {
-                let mouse_x = app::event_x(); // click position in widget coordinates
-                let pb_x = progress_bar.x();
-                let pb_w = progress_bar.w();
+                let mouse_x = app::event_x();
+                let progress_bar_x = progress_bar.x();
+                let progress_bar_width = progress_bar.width();
 
-                // Get position relative to progress bar
-                let rel_x = (mouse_x - pb_x).max(0).min(pb_w);
-                let percentage = rel_x as f64 / pb_w as f64;
+                // Get position relative to progress bar, and ensure value is never less than 0 or bigger than progress bar width
+                let rel_x = (mouse_x - progress_bar_x).max(0).min(progress_bar_width);
+                let percentage = rel_x as f64 / progress_bar_width as f64;
 
                 // Convert percentage to target position
                 let position_to_seek = audio_length.mul_f64(percentage);
