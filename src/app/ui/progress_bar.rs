@@ -273,39 +273,39 @@ mod test {
         fn test_0_progress() {
             let progress = ProgressBar::default();
 
-            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 75);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar.borrow()), 75);
         }
 
         #[test]
         fn test_25_progress() {
-            let mut progress = ProgressBar::default();
-            progress.progress_bar.set_value(25.0);
+            let progress = ProgressBar::default();
+            progress.progress_bar.borrow_mut().set_value(25.0);
 
-            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 137);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar.borrow()), 137);
         }
 
         #[test]
         fn test_50_progress() {
-            let mut progress = ProgressBar::default();
-            progress.progress_bar.set_value(50.0);
+            let progress = ProgressBar::default();
+            progress.progress_bar.borrow_mut().set_value(50.0);
 
-            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 200);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar.borrow()), 200);
         }
 
         #[test]
         fn test_75_progress() {
-            let mut progress = ProgressBar::default();
-            progress.progress_bar.set_value(75.0);
+            let progress = ProgressBar::default();
+            progress.progress_bar.borrow_mut().set_value(75.0);
 
-            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 262);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar.borrow()), 262);
         }
 
         #[test]
         fn test_100_progress() {
-            let mut progress = ProgressBar::default();
-            progress.progress_bar.set_value(100.0);
+            let progress = ProgressBar::default();
+            progress.progress_bar.borrow_mut().set_value(100.0);
 
-            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 325);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar.borrow()), 325);
         }
     }
 }
