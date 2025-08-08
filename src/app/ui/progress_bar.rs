@@ -196,6 +196,17 @@ impl ProgressBar {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
+    impl Default for ProgressBar {
+        /// Initialize a dummy ProgressBar for testing
+        fn default() -> ProgressBar {
+            let (_, rx) = mpsc::channel();
+            let (tx, _) = mpsc::channel();
+
+            ProgressBar::new(400, Duration::from_millis(100), rx, tx)
+        }
+    }
     mod format_duration {
         use super::super::*;
 
@@ -222,18 +233,14 @@ mod test {
 
         #[test]
         fn test_0_progress() {
-            let (_, rx) = mpsc::channel();
-            let (tx, _) = mpsc::channel();
-            let progress = ProgressBar::new(400, Duration::from_millis(15), rx, tx);
+            let progress = ProgressBar::default();
 
             assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 75);
         }
 
         #[test]
         fn test_25_progress() {
-            let (_, rx) = mpsc::channel();
-            let (tx, _) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
+            let mut progress = ProgressBar::default();
             progress.progress_bar.set_value(25.0);
 
             assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 137);
@@ -241,9 +248,7 @@ mod test {
 
         #[test]
         fn test_50_progress() {
-            let (_, rx) = mpsc::channel();
-            let (tx, _) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
+            let mut progress = ProgressBar::default();
             progress.progress_bar.set_value(50.0);
 
             assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 200);
@@ -251,9 +256,7 @@ mod test {
 
         #[test]
         fn test_75_progress() {
-            let (_, rx) = mpsc::channel();
-            let (tx, _) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
+            let mut progress = ProgressBar::default();
             progress.progress_bar.set_value(75.0);
 
             assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 262);
@@ -261,9 +264,7 @@ mod test {
 
         #[test]
         fn test_100_progress() {
-            let (_, rx) = mpsc::channel();
-            let (tx, _) = mpsc::channel();
-            let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
+            let mut progress = ProgressBar::default();
             progress.progress_bar.set_value(100.0);
 
             assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 325);
