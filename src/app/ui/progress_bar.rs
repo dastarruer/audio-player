@@ -113,10 +113,12 @@ impl ProgressBar {
             }
             Event::Push if app::event_mouse_button() == MouseButton::Left => {
                 match audio_sender.send(Message::FastForward(Duration::from_secs(10))) {
-                    Ok(_) => (),
-                    Err(e) => eprintln!("Unable to seek to position: {}", e),
-                };
-                true
+                    Ok(_) => true,
+                    Err(e) => {
+                        eprintln!("Unable to seek to position: {}", e);
+                        false
+                    }
+                }
             }
             _ => false,
         });
