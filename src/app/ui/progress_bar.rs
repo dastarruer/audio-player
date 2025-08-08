@@ -91,6 +91,9 @@ impl ProgressBar {
 
         let progress_bar = self.progress_bar.clone();
 
+        let audio_length = self.audio_length.clone();
+        let current_audio_pos = self.current_audio_pos.clone();
+
         // Handle hovering over progress bar
         self.knob_overlay.handle(move |_, event| match event {
             Event::Enter => {
@@ -112,11 +115,35 @@ impl ProgressBar {
                 true
             }
             Event::Push if app::event_mouse_button() == MouseButton::Left => {
-                match audio_sender.send(Message::FastForward(Duration::from_secs(10))) {
-                    Ok(_) => true,
-                    Err(e) => {
-                        eprintln!("Unable to seek to position: {}", e);
-                        false
+                let mouse_x = app::event_x(); // click position in widget coordinates
+                let pb_x = progress_bar.x();
+                let pb_w = progress_bar.w();
+
+                // Get position relative to progress bar
+                let rel_x = (mouse_x - pb_x).max(0).min(pb_w);
+                let percentage = rel_x as f64 / pb_w as f64;
+
+                // Convert percentage to target position
+                let position_to_seek = audio_length.mul_f64(percentage);
+
+                // Compute how far to jump (positive = forward, negative = backward)
+                if position_to_seek > current_audio_pos {
+                    let distance = position_to_seek - current_audio_pos;
+                    match audio_sender.send(Message::FastForward(distance)) {
+                        Ok(_) => true,
+                        Err(e) => {
+                            eprintln!("Unable to seek to position: {}", e);
+                            false
+                        }
+                    }
+                } else {
+                    let distance = current_audio_pos - position_to_seek;
+                    match audio_sender.send(Message::Rewind(distance)) {
+                        Ok(_) => true,
+                        Err(e) => {
+                            eprintln!("Unable to seek to position: {}", e);
+                            false
+                        }
                     }
                 }
             }
