@@ -1,4 +1,4 @@
-use std::{clone, sync::mpsc, time::Duration};
+use std::{sync::mpsc, time::Duration};
 
 use fltk::{
     app::{self, MouseButton},
@@ -10,7 +10,7 @@ use fltk::{
     prelude::{WidgetBase, WidgetExt},
 };
 
-use crate::app::{Message, ui::progress_bar};
+use crate::app::{Message};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
