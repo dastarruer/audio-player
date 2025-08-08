@@ -28,7 +28,7 @@ pub struct ProgressBar {
     current_audio_pos_timestamp: output::Output,
 
     /// The overlay that is used to draw the knob on top of the progress bar
-    knob_overlay: Frame,
+    knob_overlay: Rc<RefCell<Frame>>,
 
     /// The sender that will be used to rewind or fast-forward the audio when the progress bar is clicked
     audio_sender: mpsc::Sender<Message>,
@@ -62,7 +62,7 @@ impl ProgressBar {
         let (current_audio_pos_timestamp, _) =
             ProgressBar::create_timestamps(&progress_bar.borrow(), audio_length);
 
-        let knob_overlay = Frame::new(progress_bar_x, PROGRESS_BAR_Y - 10, WIDTH, 20, "");
+        let knob_overlay = Rc::new(RefCell::new(Frame::new(progress_bar_x, PROGRESS_BAR_Y - 10, WIDTH, 20, "")));
 
         ProgressBar {
             progress_bar,
@@ -91,21 +91,20 @@ impl ProgressBar {
         let knob_y = self.progress_bar.borrow().y() - 2;
 
         // Clone/copy a bunch of values that will be moved into the handle closure
-        // TODO: Remove cloning
-        let mut knob_overlay_clone = self.knob_overlay.clone();
+        let knob_overlay = Rc::clone(&self.knob_overlay);
         let audio_sender = self.audio_sender.clone();
         let audio_length = self.audio_length;
         let current_audio_pos = self.current_audio_pos;
         let progress_bar = Rc::clone(&self.progress_bar);
 
         // Handle hovering over progress bar
-        self.knob_overlay.handle(move |_, event| match event {
+        self.knob_overlay.borrow_mut().handle(move |_, event| match event {
             Event::Enter => {
                 // Clone the reference again so it can then be moved into the draw closure
                 let progress_bar = Rc::clone(&progress_bar);
 
                 // Update the knob overlay's draw function to draw the knob
-                knob_overlay_clone.draw(move |_| {
+                knob_overlay.borrow_mut().draw(move |_| {
                     // Update knob_x
                     let knob_x = ProgressBar::knob_x(&progress_bar.borrow());
 
@@ -116,7 +115,7 @@ impl ProgressBar {
             }
             Event::Leave => {
                 // Update the knob overlay's draw function to draw nothing
-                knob_overlay_clone.draw(move |_| {});
+                knob_overlay.borrow_mut().draw(move |_| {});
                 true
             }
             Event::Push if app::event_mouse_button() == MouseButton::Left => {
@@ -159,7 +158,7 @@ impl ProgressBar {
         });
 
         // Draw the knob
-        self.knob_overlay.redraw();
+        self.knob_overlay.borrow_mut().redraw();
 
         // Update the timestamp
         self.current_audio_pos_timestamp
