@@ -10,7 +10,7 @@ use fltk::{
     prelude::{WidgetBase, WidgetExt},
 };
 
-use crate::app::Message;
+use crate::app::{Message, ui::progress_bar};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
@@ -83,19 +83,21 @@ impl ProgressBar {
         }
 
         let diameter = 10;
-        let knob_x = self.knob_x();
         let knob_y = self.progress_bar.y() - 2;
 
         let mut knob_overlay_clone = self.knob_overlay.clone();
 
         let audio_sender = self.audio_sender.clone();
 
+        let progress_bar = self.progress_bar.clone();
+
         // Handle hovering over progress bar
-        // TODO: Knob does not redraw if you keep hovering over it, pls fix
         self.knob_overlay.handle(move |_, event| match event {
             Event::Enter => {
+                let progress_bar = progress_bar.clone();
                 // Update the knob overlay's draw function to draw the knob
                 knob_overlay_clone.draw(move |_| {
+                    let knob_x = ProgressBar::knob_x(&progress_bar);
                     draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
                 });
                 true
@@ -179,12 +181,12 @@ impl ProgressBar {
     }
 
     /// Get the x position of the progress bar knob
-    fn knob_x(&self) -> i32 {
-        let progress = self.progress_bar.value() / self.progress_bar.maximum();
-        let progress_bar_width = self.progress_bar.width() as f64;
+    fn knob_x(progress_bar: &Progress) -> i32 {
+        let progress = progress_bar.value() / progress_bar.maximum();
+        let progress_bar_width = progress_bar.width() as f64;
         let progress_offset = (progress * progress_bar_width) as i32;
 
-        self.progress_bar.x() + progress_offset
+        progress_bar.x() + progress_offset
     }
 }
 
