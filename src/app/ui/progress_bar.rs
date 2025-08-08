@@ -90,12 +90,12 @@ impl ProgressBar {
         let diameter = 10;
         let knob_y = self.progress_bar.borrow().y() - 2;
 
-        // Clone a bunch of values that will be moved into the handle closure
+        // Clone/copy a bunch of values that will be moved into the handle closure
         // TODO: Remove cloning
         let mut knob_overlay_clone = self.knob_overlay.clone();
         let audio_sender = self.audio_sender.clone();
-        let audio_length = self.audio_length.clone();
-        let current_audio_pos = self.current_audio_pos.clone();
+        let audio_length = self.audio_length;
+        let current_audio_pos = self.current_audio_pos;
         let progress_bar = Rc::clone(&self.progress_bar);
 
         // Handle hovering over progress bar
