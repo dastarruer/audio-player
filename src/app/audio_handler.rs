@@ -131,16 +131,16 @@ impl AudioHandler {
         audio_pos_sender: &mpsc::Sender<Duration>,
     ) {
         match message {
-            Message::Play => AudioHandler::with_sink(&sink_ref, |sink| {
+            Message::Play => AudioHandler::with_sink(sink_ref, |sink| {
                 sink.play();
             }),
-            Message::Pause => AudioHandler::with_sink(&sink_ref, |sink| {
+            Message::Pause => AudioHandler::with_sink(sink_ref, |sink| {
                 sink.pause();
             }),
-            Message::FastForward(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
+            Message::FastForward(duration_secs) => AudioHandler::with_sink(sink_ref, |sink| {
                 AudioHandler::fast_forward(&audio_pos_sender, duration_secs, sink);
             }),
-            Message::Rewind(duration_secs) => AudioHandler::with_sink(&sink_ref, |sink| {
+            Message::Rewind(duration_secs) => AudioHandler::with_sink(sink_ref, |sink| {
                 AudioHandler::rewind(audio_pos_sender, duration_secs, sink);
             }),
         }
