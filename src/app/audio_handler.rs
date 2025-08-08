@@ -117,7 +117,7 @@ impl AudioHandler {
     }
 
     fn create_sink(stream_handle: &OutputStream) -> Sink {
-        rodio::Sink::connect_new(&stream_handle.mixer())
+        rodio::Sink::connect_new(stream_handle.mixer())
     }
 
     fn open_output_stream() -> OutputStream {
