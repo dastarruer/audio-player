@@ -95,9 +95,13 @@ impl ProgressBar {
         self.knob_overlay.handle(move |_, event| match event {
             Event::Enter => {
                 let progress_bar = progress_bar.clone();
+
                 // Update the knob overlay's draw function to draw the knob
                 knob_overlay_clone.draw(move |_| {
+                    // Update knob_x
                     let knob_x = ProgressBar::knob_x(&progress_bar);
+
+                    // Draw the knob
                     draw::draw_circle_fill(knob_x, knob_y, diameter, Color::gray_ramp(1));
                 });
                 true
@@ -222,7 +226,7 @@ mod test {
             let (tx, _) = mpsc::channel();
             let progress = ProgressBar::new(400, Duration::from_millis(15), rx, tx);
 
-            assert_eq!(progress.knob_x(), 75);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 75);
         }
 
         #[test]
@@ -232,7 +236,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
             progress.progress_bar.set_value(25.0);
 
-            assert_eq!(progress.knob_x(), 137);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 137);
         }
 
         #[test]
@@ -242,7 +246,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
             progress.progress_bar.set_value(50.0);
 
-            assert_eq!(progress.knob_x(), 200);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 200);
         }
 
         #[test]
@@ -252,7 +256,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
             progress.progress_bar.set_value(75.0);
 
-            assert_eq!(progress.knob_x(), 262);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 262);
         }
 
         #[test]
@@ -262,7 +266,7 @@ mod test {
             let mut progress = ProgressBar::new(400, Duration::from_millis(100), rx, tx);
             progress.progress_bar.set_value(100.0);
 
-            assert_eq!(progress.knob_x(), 325);
+            assert_eq!(ProgressBar::knob_x(&progress.progress_bar), 325);
         }
     }
 }
