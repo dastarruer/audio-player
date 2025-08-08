@@ -10,7 +10,7 @@ use fltk::{
     prelude::{WidgetBase, WidgetExt},
 };
 
-use crate::app::Message;
+use crate::app::{Message, ui::progress_bar};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
@@ -90,19 +90,19 @@ impl ProgressBar {
         let diameter = 10;
         let knob_y = self.progress_bar.borrow().y() - 2;
 
+        // Clone a bunch of values that will be moved into the handle closure
+        // TODO: Remove cloning
         let mut knob_overlay_clone = self.knob_overlay.clone();
-
         let audio_sender = self.audio_sender.clone();
-
-        let progress_bar = Rc::clone(&self.progress_bar);
-
         let audio_length = self.audio_length.clone();
         let current_audio_pos = self.current_audio_pos.clone();
+        let progress_bar = Rc::clone(&self.progress_bar);
 
         // Handle hovering over progress bar
         self.knob_overlay.handle(move |_, event| match event {
             Event::Enter => {
-                let progress_bar = progress_bar.clone();
+                // Clone the reference again so it can then be moved into the draw closure
+                let progress_bar = Rc::clone(&progress_bar);
 
                 // Update the knob overlay's draw function to draw the knob
                 knob_overlay_clone.draw(move |_| {
@@ -120,9 +120,12 @@ impl ProgressBar {
                 true
             }
             Event::Push if app::event_mouse_button() == MouseButton::Left => {
+                // Borrow progress bar once here so we don't have to do it multiple times
+                let progress_bar = progress_bar.borrow();
+
                 let mouse_x = app::event_x();
-                let progress_bar_x = progress_bar.borrow().x();
-                let progress_bar_width = progress_bar.borrow().width();
+                let progress_bar_x = progress_bar.x();
+                let progress_bar_width = progress_bar.width();
 
                 // Get position relative to progress bar, and ensure value is never less than 0 or bigger than progress bar width
                 let rel_x = (mouse_x - progress_bar_x).max(0).min(progress_bar_width);
