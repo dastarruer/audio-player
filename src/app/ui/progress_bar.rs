@@ -72,6 +72,7 @@ impl ProgressBar {
     }
 
     /// Update the progress bar based on the audio's current position.
+    /// This function is intended to be called continuously in the app's main loop.
     pub fn update(&mut self) {
         // Drain all available positions and keep the newest one, so the progress bar never lags behind
         while let Ok(pos) = self.audio_pos_receiver.try_recv() {
