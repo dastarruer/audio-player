@@ -1,4 +1,9 @@
-use std::{cell::RefCell, rc::Rc, sync::mpsc, time::Duration};
+use std::{
+    cell::{Ref, RefCell},
+    rc::Rc,
+    sync::mpsc,
+    time::Duration,
+};
 
 use fltk::{
     app::{self, MouseButton},
@@ -10,7 +15,7 @@ use fltk::{
     prelude::{WidgetBase, WidgetExt},
 };
 
-use crate::app::Message;
+use crate::app::{Message, ui::progress_bar};
 
 /// Stores the progress bar that shows the user how far into the audio track they are.
 /// The user can also click on the progress bar in order seek to a specific point in the audio
@@ -41,9 +46,34 @@ impl ProgressBar {
         audio_pos_receiver: mpsc::Receiver<Duration>,
         audio_sender: mpsc::Sender<Message>,
     ) -> ProgressBar {
+        let progress_bar = ProgressBar::create_progress_widget(win_width, audio_length);
+
+        let (current_audio_pos_timestamp, _) =
+            ProgressBar::create_timestamps(&progress_bar.borrow(), audio_length);
+
+        let knob_overlay = ProgressBar::create_knob_overlay_widget(&progress_bar);
+
+        let current_audio_pos = Rc::new(RefCell::new(Duration::from_secs(0)));
+
+        // Declare this here seperately so we can take some of its values
+        let progress = ProgressBar {
+            progress_bar,
+            audio_pos_receiver,
+            current_audio_pos,
+            audio_length,
+            current_audio_pos_timestamp,
+            knob_overlay,
+            audio_sender,
+        };
+
+        ProgressBar::add_knob_overlay_event_handler(&progress);
+
+        progress
+    }
+
+    fn create_progress_widget(win_width: i32, audio_length: Duration) -> Rc<RefCell<Progress>> {
         const WIDTH: i32 = 250;
         const PROGRESS_BAR_Y: i32 = 190;
-        const KNOB_Y_OFFSET: i32 = -2;
 
         let progress_bar_x = (win_width - WIDTH) / 2; // Center the progress bar horizontally
 
@@ -60,28 +90,27 @@ impl ProgressBar {
             .set_maximum(audio_length.as_millis() as f64);
         progress_bar.borrow_mut().set_value(0.0);
 
-        let (current_audio_pos_timestamp, _) =
-            ProgressBar::create_timestamps(&progress_bar.borrow(), audio_length);
+        progress_bar
+    }
 
-        let knob_overlay = Rc::new(RefCell::new(Frame::new(
-            progress_bar_x,
-            PROGRESS_BAR_Y - 10,
-            WIDTH,
+    fn create_knob_overlay_widget(progress_bar: &Rc<RefCell<Progress>>) -> Rc<RefCell<Frame>> {
+        let progress_bar_ref = progress_bar.borrow();
+        let knob_overlay = Frame::new(
+            progress_bar_ref.x(),
+            progress_bar_ref.y() - 10,
+            progress_bar_ref.width(),
             20,
             "",
-        )));
+        );
 
-        let current_audio_pos = Rc::new(RefCell::new(Duration::from_secs(0)));
+        // Wrap created knob_overlay in Rc<RefCell>
+        let knob_overlay = Rc::new(RefCell::new(knob_overlay));
 
-        let progress = ProgressBar {
-            progress_bar,
-            audio_pos_receiver,
-            current_audio_pos,
-            audio_length,
-            current_audio_pos_timestamp,
-            knob_overlay,
-            audio_sender,
-        };
+        knob_overlay
+    }
+
+    fn add_knob_overlay_event_handler(progress: &ProgressBar) {
+        const KNOB_Y_OFFSET: i32 = -2;
 
         let diameter = 10;
         let knob_y = progress.progress_bar.borrow().y() + KNOB_Y_OFFSET;
@@ -156,8 +185,6 @@ impl ProgressBar {
                 }
                 _ => false,
             });
-
-        progress
     }
 
     /// Update the progress bar based on the audio's current position.
@@ -174,7 +201,9 @@ impl ProgressBar {
 
         // Update the timestamp
         self.current_audio_pos_timestamp
-            .set_label(&ProgressBar::format_duration(self.current_audio_pos.borrow().clone()));
+            .set_label(&ProgressBar::format_duration(
+                self.current_audio_pos.borrow().clone(),
+            ));
 
         // Update the progress bar
         self.progress_bar
