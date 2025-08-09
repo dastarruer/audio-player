@@ -120,7 +120,7 @@ impl ProgressBar {
                 Event::Push if app::event_mouse_button() == MouseButton::Left => {
                     // Borrow progress_bar and current_audio_pos once here so we don't have to do it multiple times
                     let progress_bar = progress_bar.borrow();
-                    let current_audio_pos = *current_audio_pos.borrow();
+                    let current_audio_pos = current_audio_pos.borrow().clone();
 
                     let mouse_x = app::event_x();
                     let progress_bar_x = progress_bar.x();
@@ -174,7 +174,7 @@ impl ProgressBar {
 
         // Update the timestamp
         self.current_audio_pos_timestamp
-            .set_label(&ProgressBar::format_duration(*self.current_audio_pos.borrow()));
+            .set_label(&ProgressBar::format_duration(self.current_audio_pos.borrow().clone()));
 
         // Update the progress bar
         self.progress_bar
