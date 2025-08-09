@@ -147,41 +147,12 @@ impl ProgressBar {
                     true
                 }
                 Event::Push if app::event_mouse_button() == MouseButton::Left => {
-                    // Borrow progress_bar and current_audio_pos once here so we don't have to do it multiple times
-                    let progress_bar = progress_bar.borrow();
-                    let current_audio_pos = current_audio_pos.borrow().clone();
-
-                    let mouse_x = app::event_x();
-                    let progress_bar_x = progress_bar.x();
-                    let progress_bar_width = progress_bar.width();
-
-                    // Get position relative to progress bar, and ensure value is never less than 0 or bigger than progress bar width
-                    let rel_x = (mouse_x - progress_bar_x).max(0).min(progress_bar_width);
-                    let percentage = rel_x as f64 / progress_bar_width as f64;
-
-                    // Convert percentage to target position
-                    let position_to_seek = audio_length.mul_f64(percentage);
-
-                    // Compute how far to jump (positive = forward, negative = backward)
-                    if position_to_seek > current_audio_pos {
-                        let distance = position_to_seek - current_audio_pos;
-                        match audio_sender.send(Message::FastForward(distance)) {
-                            Ok(_) => true,
-                            Err(e) => {
-                                eprintln!("Unable to seek to position: {}", e);
-                                false
-                            }
-                        }
-                    } else {
-                        let distance = current_audio_pos - position_to_seek;
-                        match audio_sender.send(Message::Rewind(distance)) {
-                            Ok(_) => true,
-                            Err(e) => {
-                                eprintln!("Unable to seek to position: {}", e);
-                                false
-                            }
-                        }
-                    }
+                    ProgressBar::handle_seek_event(
+                        &audio_sender,
+                        audio_length,
+                        &current_audio_pos,
+                        &progress_bar,
+                    )
                 }
                 _ => false,
             });
@@ -209,6 +180,49 @@ impl ProgressBar {
         self.progress_bar
             .borrow_mut()
             .set_value(self.current_audio_pos.borrow().as_millis() as f64);
+    }
+
+    fn handle_seek_event(
+        audio_sender: &mpsc::Sender<Message>,
+        audio_length: Duration,
+        current_audio_pos: &Rc<RefCell<Duration>>,
+        progress_bar: &Rc<RefCell<Progress>>,
+    ) -> bool {
+        // Borrow progress_bar and current_audio_pos once here so we don't have to do it multiple times
+        let progress_bar = progress_bar.borrow();
+        let current_audio_pos = current_audio_pos.borrow().clone();
+
+        let mouse_x = app::event_x();
+        let progress_bar_x = progress_bar.x();
+        let progress_bar_width = progress_bar.width();
+
+        // Get position relative to progress bar, and ensure value is never less than 0 or bigger than progress bar width
+        let rel_x = (mouse_x - progress_bar_x).max(0).min(progress_bar_width);
+        let percentage = rel_x as f64 / progress_bar_width as f64;
+
+        // Convert percentage to target position
+        let position_to_seek = audio_length.mul_f64(percentage);
+
+        // Compute how far to jump (positive = forward, negative = backward)
+        if position_to_seek > current_audio_pos {
+            let distance = position_to_seek - current_audio_pos;
+            match audio_sender.send(Message::FastForward(distance)) {
+                Ok(_) => true,
+                Err(e) => {
+                    eprintln!("Unable to seek to position: {}", e);
+                    false
+                }
+            }
+        } else {
+            let distance = current_audio_pos - position_to_seek;
+            match audio_sender.send(Message::Rewind(distance)) {
+                Ok(_) => true,
+                Err(e) => {
+                    eprintln!("Unable to seek to position: {}", e);
+                    false
+                }
+            }
+        }
     }
 
     /// Create the timestamps on both sides of the progress bar.
