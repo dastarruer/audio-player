@@ -78,6 +78,8 @@ impl ProgressBar {
     /// Update the progress bar based on the audio's current position.
     /// This function is intended to be called continuously in the app's main loop.
     pub fn update(&mut self) {
+        const KNOB_Y_OFFSET: i32 = -2;
+
         // Drain all available positions and keep the newest one, so the progress bar never lags behind
         while let Ok(pos) = self.audio_pos_receiver.try_recv() {
             if self.audio_length < pos {
@@ -88,7 +90,7 @@ impl ProgressBar {
         }
 
         let diameter = 10;
-        let knob_y = self.progress_bar.borrow().y() - 2;
+        let knob_y = self.progress_bar.borrow().y() + KNOB_Y_OFFSET;
 
         // Clone/copy a bunch of values that will be moved into the handle closure
         let knob_overlay = Rc::clone(&self.knob_overlay);
