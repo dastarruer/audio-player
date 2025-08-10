@@ -98,10 +98,8 @@ impl ProgressBar {
             "",
         );
 
-        // Wrap created knob_overlay in Rc<RefCell>
-        let knob_overlay = Rc::new(RefCell::new(knob_overlay));
-
-        knob_overlay
+        // Wrap created knob_overlay in Rc<RefCell> and return it
+        Rc::new(RefCell::new(knob_overlay))
     }
 
     fn add_knob_overlay_event_handler(progress: &ProgressBar) {
@@ -168,7 +166,7 @@ impl ProgressBar {
         // Update the timestamp
         self.current_audio_pos_timestamp
             .set_label(&ProgressBar::format_duration(
-                self.current_audio_pos.borrow().clone(),
+                *self.current_audio_pos.borrow(),
             ));
 
         // Update the progress bar
@@ -185,7 +183,7 @@ impl ProgressBar {
     ) -> bool {
         // Borrow progress_bar and current_audio_pos once here so we don't have to do it multiple times
         let progress_bar = progress_bar.borrow();
-        let current_audio_pos = current_audio_pos.borrow().clone();
+        let current_audio_pos = *current_audio_pos.borrow();
 
         let mouse_x = app::event_x();
         let progress_bar_x = progress_bar.x();
