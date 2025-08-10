@@ -65,10 +65,10 @@ impl PlaybackButtons {
             // Update the button label
             btn.set_label(new_label);
 
-            // Send a message to the audio thread to play the audio
+            // Send a message to the audio thread to play/pause the audio
             match sender.send(message) {
                 Ok(_) => (),
-                Err(e) => println!("Unable to play audio: {:?}", e),
+                Err(e) => eprintln!("Unable to play/pause audio: {:?}", e),
             };
         });
     }
