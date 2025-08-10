@@ -9,6 +9,8 @@ pub struct PlaybackButtons {}
 
 impl PlaybackButtons {
     const SEEK_DURATION_SECS: u64 = 5;
+    const PLAY_BUTTON: &str = "";
+    const PAUSE_BUTTON: &str = "";
 
     /// Create new playback buttons
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
@@ -47,39 +49,26 @@ impl PlaybackButtons {
 
     /// Create the play button and theme it.
     fn create_play_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
-        const PLAY_BUTTON: &str = "";
-        const PAUSE_BUTTON: &str = "";
-
         let mut btn = PlaybackButtons::style_button(
             button::Button::default()
                 .with_size(btn_size, btn_size)
                 .with_pos(btn_x, btn_y)
-                .with_label(PAUSE_BUTTON),
+                .with_label(Self::PAUSE_BUTTON),
         );
 
         // Define a function to execute once the button is clicked
         btn.set_callback(move |btn| {
             // Play/pause audio
-            match btn.label().as_str() {
-                PAUSE_BUTTON => {
-                    btn.set_label(PLAY_BUTTON);
+            let current_label = btn.label();
+            let (new_label, message) = PlaybackButtons::handle_play_pause_click(&current_label);
 
-                    // Send a message to the audio thread to pause the audio
-                    match sender.send(Message::Pause) {
-                        Ok(_) => (),
-                        Err(e) => println!("Unable to play audio: {:?}", e),
-                    };
-                }
-                PLAY_BUTTON => {
-                    btn.set_label(PAUSE_BUTTON);
+            // Update the button label
+            btn.set_label(new_label);
 
-                    // Send a message to the audio thread to play the audio
-                    match sender.send(Message::Play) {
-                        Ok(_) => (),
-                        Err(e) => println!("Unable to play audio: {:?}", e),
-                    };
-                }
-                _ => unreachable!(),
+            // Send a message to the audio thread to play the audio
+            match sender.send(message) {
+                Ok(_) => (),
+                Err(e) => println!("Unable to play audio: {:?}", e),
             };
         });
     }
@@ -127,5 +116,41 @@ impl PlaybackButtons {
                 Err(e) => println!("Unable to rewind: {:?}", e),
             }
         });
+    }
+
+    /// Return the corresponding label and Message once the play/pause button is clicked.
+    /// For instance, if the audio is paused, the function will return (Self::PAUSE_BUTTON, Message::Play).
+    /// However, if the audio is playing, the function will return (Self::PLAY_BUTTON, Message::Pause).
+    fn handle_play_pause_click(current_label: &str) -> (&str, Message) {
+        match current_label {
+            Self::PAUSE_BUTTON => (Self::PLAY_BUTTON, Message::Pause),
+            Self::PLAY_BUTTON => (Self::PAUSE_BUTTON, Message::Play),
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    mod handle_play_pause_click {
+        use super::*;
+
+        #[test]
+        fn test_paused_btn() {
+            assert_eq!(
+                PlaybackButtons::handle_play_pause_click(PlaybackButtons::PLAY_BUTTON),
+                (PlaybackButtons::PAUSE_BUTTON, Message::Play),
+            );
+        }
+
+        #[test]
+        fn test_play_btn() {
+            assert_eq!(
+                PlaybackButtons::handle_play_pause_click(PlaybackButtons::PAUSE_BUTTON),
+                (PlaybackButtons::PLAY_BUTTON, Message::Pause)
+            );
+        }
     }
 }
