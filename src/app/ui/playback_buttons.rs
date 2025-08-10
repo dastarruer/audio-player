@@ -8,7 +8,7 @@ use crate::app::Message;
 pub struct PlaybackButtons {}
 
 impl PlaybackButtons {
-    const SEEK_DURATION_SECS: u64 = 5;
+    const SEEK_DURATION: Duration = Duration::from_secs(5);
     const PLAY_BUTTON: &str = "";
     const PAUSE_BUTTON: &str = "";
 
@@ -66,9 +66,8 @@ impl PlaybackButtons {
             btn.set_label(new_label);
 
             // Send a message to the audio thread to play/pause the audio
-            match sender.send(message) {
-                Ok(_) => (),
-                Err(e) => eprintln!("Unable to play/pause audio: {:?}", e),
+            if let Err(e) = sender.send(message) {
+                eprintln!("Unable to play/pause audio: {:?}", e);
             };
         });
     }
@@ -89,11 +88,8 @@ impl PlaybackButtons {
 
         seek_forwards_btn.set_callback(move |_| {
             // Send a fast-forward message to the audio thread
-            match sender.send(Message::FastForward(Duration::from_secs(
-                Self::SEEK_DURATION_SECS,
-            ))) {
-                Ok(_) => (),
-                Err(e) => println!("Unable to fast-forward: {:?}", e),
+            if let Err(e) = sender.send(Message::FastForward(Self::SEEK_DURATION)) {
+                eprintln!("Unable to fast-forward: {:?}", e);
             }
         });
     }
@@ -109,9 +105,7 @@ impl PlaybackButtons {
 
         seek_backwards_btn.set_callback(move |_| {
             // Send a rewind message to the audio thread
-            match sender.send(Message::Rewind(Duration::from_secs(
-                Self::SEEK_DURATION_SECS,
-            ))) {
+            match sender.send(Message::Rewind(Self::SEEK_DURATION)) {
                 Ok(_) => (),
                 Err(e) => println!("Unable to rewind: {:?}", e),
             }
