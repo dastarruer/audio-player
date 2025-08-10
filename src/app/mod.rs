@@ -15,7 +15,7 @@ use crate::app::ui::progress_bar::ProgressBar;
 
 /// A message to be sent to the audio thread
 #[derive(Debug, PartialEq)]
-pub enum Message {
+enum Message {
     Play,
     Pause,
     FastForward(Duration),
