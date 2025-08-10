@@ -105,9 +105,8 @@ impl PlaybackButtons {
 
         seek_backwards_btn.set_callback(move |_| {
             // Send a rewind message to the audio thread
-            match sender.send(Message::Rewind(Self::SEEK_DURATION)) {
-                Ok(_) => (),
-                Err(e) => println!("Unable to rewind: {:?}", e),
+            if let Err(e) = sender.send(Message::Rewind(Self::SEEK_DURATION)) {
+                eprintln!("Unable to rewind: {:?}", e)
             }
         });
     }
