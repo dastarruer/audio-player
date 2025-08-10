@@ -107,8 +107,8 @@ impl AudioHandler {
                 if let Err(e) = audio_pos_sender.send(current_pos) {
                     eprintln!("Unable to send audio position: {:?}", e);
 
-                    // Break the loop, since if sending the audio pos failed it means that the receiver has been dropped
-                    break;
+                    // If sending the audio pos failed it means that the receiver has been dropped and the error is unrecoverable
+                    exit(1);
                 }
 
                 // Sleep to prevent using too much cpu
