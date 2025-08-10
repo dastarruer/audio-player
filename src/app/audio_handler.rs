@@ -104,10 +104,12 @@ impl AudioHandler {
                 let current_pos = AudioHandler::with_sink(&new_sink_ref, |sink| sink.get_pos());
 
                 // Send the current position to the progress bar
-                match audio_pos_sender.send(current_pos) {
-                    Ok(_) => (),
-                    Err(_) => break,
-                };
+                if let Err(e) = audio_pos_sender.send(current_pos) {
+                    eprintln!("Unable to send audio position: {:?}", e);
+
+                    // Break the loop, since if sending the audio pos failed it means that the receiver has been dropped
+                    break;
+                }
 
                 // Sleep to prevent using too much cpu
                 let delay = Duration::from_millis(50);
@@ -170,16 +172,14 @@ impl AudioHandler {
 
     /// Seek to a specific part in the audio and send the position to the progress bar
     fn seek(audio_pos_sender: &mpsc::Sender<Duration>, sink: &Sink, target_pos: Duration) {
-        match sink.try_seek(target_pos) {
-            Ok(_) => (),
-            Err(e) => eprintln!("Unable to rewind: {:?}", e),
-        };
+        if let Err(e) = sink.try_seek(target_pos) {
+            eprintln!("Unable to rewind: {:?}", e)
+        }
 
         // Send the new position to the progress bar
-        match audio_pos_sender.send(target_pos) {
-            Ok(_) => (),
-            Err(e) => eprintln!("Unable to send position to progress bar: {:?}", e),
-        };
+        if let Err(e) = audio_pos_sender.send(target_pos) {
+            eprintln!("Unable to send position to progress bar: {:?}", e)
+        }
     }
 
     /// Run a closure that operates on `sink` for audio playback control by extracting `sink` from `sink_ref`.
