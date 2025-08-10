@@ -199,22 +199,22 @@ impl ProgressBar {
         // Compute how far to jump (positive = forward, negative = backward)
         if position_to_seek > current_audio_pos {
             let distance = position_to_seek - current_audio_pos;
-            match audio_sender.send(Message::FastForward(distance)) {
-                Ok(_) => true,
-                Err(e) => {
-                    eprintln!("Unable to seek to position: {}", e);
-                    false
-                }
+
+            // Send the fast-forward message
+            if let Err(e) = audio_sender.send(Message::FastForward(distance)) {
+                eprintln!("Unable to fast-forward: {}", e);
+                return false;
             }
+            true
         } else {
             let distance = current_audio_pos - position_to_seek;
-            match audio_sender.send(Message::Rewind(distance)) {
-                Ok(_) => true,
-                Err(e) => {
-                    eprintln!("Unable to seek to position: {}", e);
-                    false
-                }
+
+            // Send the rewind message
+            if let Err(e) = audio_sender.send(Message::Rewind(distance)) {
+                eprintln!("Unable to rewind: {}", e);
+                return false;
             }
+            true
         }
     }
 
