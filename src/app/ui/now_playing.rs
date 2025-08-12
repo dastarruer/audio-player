@@ -44,5 +44,11 @@ mod test {
             assert_eq!(primary_tag.title().unwrap(), "less than lovers");
             assert_eq!(primary_tag.artist().unwrap(), "Kensuke Ushio");
         }
+
+        #[test]
+        fn parse_non_existent_file() {
+            let invalid_file = NowPlaying::parse_file("./does_not_exist.mp3");
+            assert!(invalid_file.is_err());
+        }
     }
 }
