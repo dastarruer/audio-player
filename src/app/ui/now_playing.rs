@@ -38,26 +38,22 @@ mod test {
 
         const TEST_DATA: &str = "./src/app/ui/test_files";
 
+        fn assert_metadata(filename: &str, expected_title: &str, expected_artist: &str) {
+            let full_path = format!("{}/{}", TEST_DATA, filename);
+            let primary_tag = NowPlaying::parse_file(&full_path).unwrap();
+
+            assert_eq!(primary_tag.title().unwrap(), expected_title);
+            assert_eq!(primary_tag.artist().unwrap(), expected_artist);
+        }
+
         #[test]
         fn parse_valid_mp3_file() {
-            let binding = format!("{}/test.mp3", TEST_DATA);
-            let path = binding.as_str();
-
-            let primary_tag = NowPlaying::parse_file(path).unwrap();
-
-            assert_eq!(primary_tag.title().unwrap(), "less than lovers");
-            assert_eq!(primary_tag.artist().unwrap(), "Kensuke Ushio");
+            assert_metadata("test.mp3", "less than lovers", "Kensuke Ushio");
         }
 
         #[test]
         fn parse_valid_flac_file() {
-            let binding = format!("{}/test.flac", TEST_DATA);
-            let path = binding.as_str();
-
-            let primary_tag = NowPlaying::parse_file(path).unwrap();
-
-            assert_eq!(primary_tag.title().unwrap(), "less than lovers");
-            assert_eq!(primary_tag.artist().unwrap(), "Kensuke Ushio");
+            assert_metadata("test.flac", "less than lovers", "Kensuke Ushio");
         }
 
         #[test]
