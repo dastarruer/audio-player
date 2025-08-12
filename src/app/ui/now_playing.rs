@@ -10,7 +10,8 @@ impl NowPlaying {
         NowPlaying {}
     }
 
-    /// Parse an audio file's metadata, and return the primary tag. This will contain details about the audio, such as the title, artist, etc.
+    /// Parse an audio file's metadata, and return the primary tag. If the primary tag is not found, it will return the first tag.
+    /// These tags contain details about the audio, such as the title, artist, etc.
     /// # Errors
     /// - If `path` does not exist
     /// - If the reader contains invalid data
@@ -18,13 +19,13 @@ impl NowPlaying {
     pub fn parse_file(path: &str) -> Result<Tag, LoftyError> {
         let tagged_file = read_from_path(path)?;
 
-        // If the primary tag doesn't exist, or the tag types
-        // don't matter, the primary tag can be retrieved
-        let primary_tag = tagged_file
+        // Get the primary tag, and if primary tag is not found, fall back to first tag
+        let tag = tagged_file
             .primary_tag()
+            .or_else(|| tagged_file.first_tag())
             .ok_or_else(|| LoftyError::new(ErrorKind::FakeTag))?;
 
-        Ok(primary_tag.clone())
+        Ok(tag.clone())
     }
 }
 
