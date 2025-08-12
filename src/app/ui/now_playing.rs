@@ -15,7 +15,7 @@ impl NowPlaying {
     /// - If `path` does not exist
     /// - If the reader contains invalid data
     /// - If the audio file does not contain a primary tag
-    pub fn parse_file(path: &str) -> Result<&Tag, LoftyError> {
+    pub fn parse_file(path: &str) -> Result<Tag, LoftyError> {
         let tagged_file = read_from_path(path)?;
 
         // If the primary tag doesn't exist, or the tag types
@@ -24,7 +24,7 @@ impl NowPlaying {
             .primary_tag()
             .ok_or_else(|| LoftyError::new(ErrorKind::FakeTag))?;
 
-        Ok(primary_tag)
+        Ok(primary_tag.clone())
     }
 }
 
@@ -38,10 +38,11 @@ mod test {
         use super::*;
 
         #[test]
-        fn parse_file() {
+        fn parse_valid_file() {
             let primary_tag = NowPlaying::parse_file("./test.mp3").unwrap();
 
-            assert_eq!(primary_tag.title().unwrap(), "less than lovers")
+            assert_eq!(primary_tag.title().unwrap(), "less than lovers");
+            assert_eq!(primary_tag.artist().unwrap(), "Kensuke Ushio");
         }
     }
 }
