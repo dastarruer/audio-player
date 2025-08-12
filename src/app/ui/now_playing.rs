@@ -38,6 +38,7 @@ mod test {
 
         const TEST_DATA: &str = "./src/app/ui/test_files";
 
+        /// A testing function to check that the metadata for an audio file is being parsed properly
         fn assert_metadata(filename: &str, expected_title: &str, expected_artist: &str) {
             let full_path = format!("{}/{}", TEST_DATA, filename);
             let primary_tag = NowPlaying::parse_file(&full_path).unwrap();
