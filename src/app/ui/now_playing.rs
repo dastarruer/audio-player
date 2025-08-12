@@ -15,7 +15,7 @@ impl NowPlaying {
     /// # Errors
     /// - If `path` does not exist
     /// - If the reader contains invalid data
-    /// - If the audio file does not contain a primary tag
+    /// - If the audio file does not contain a primary tag or a first tag
     pub fn parse_file(path: &str) -> Result<Tag, LoftyError> {
         let tagged_file = read_from_path(path)?;
 
