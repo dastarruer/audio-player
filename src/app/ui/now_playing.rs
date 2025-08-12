@@ -10,14 +10,13 @@ impl NowPlaying {
         NowPlaying {}
     }
 
+    /// Parse an audio file's metadata, and return the first tag. This will contain details about the audio, such as the title, artist, etc.
+    /// # Errors
+    /// - If `path` does not exist
+    /// - If the reader contains invalid data
+    /// - If the audio file does not contain a first tag
     pub fn parse_file(path: &str) -> Result<(), LoftyError> {
-        let path = "test.mp3";
         let tagged_file = read_from_path(path)?;
-
-        // Get the primary tag
-        let _id3v2 = tagged_file
-            .primary_tag()
-            .ok_or_else(|| LoftyError::new(ErrorKind::FakeTag))?;
 
         // If the primary tag doesn't exist, or the tag types
         // don't matter, the first tag can be retrieved
