@@ -33,13 +33,17 @@ mod test {
     use super::*;
 
     mod parse_file {
+        use super::*;
         use lofty::tag::Accessor;
 
-        use super::*;
+        const TEST_DATA: &str = "./src/app/ui/test_files";
 
         #[test]
         fn parse_valid_file() {
-            let primary_tag = NowPlaying::parse_file("./test.mp3").unwrap();
+            let binding = format!("{}/test.mp3", TEST_DATA);
+            let path = binding.as_str();
+
+            let primary_tag = NowPlaying::parse_file(path).unwrap();
 
             assert_eq!(primary_tag.title().unwrap(), "less than lovers");
             assert_eq!(primary_tag.artist().unwrap(), "Kensuke Ushio");
@@ -47,7 +51,10 @@ mod test {
 
         #[test]
         fn parse_non_existent_file() {
-            let invalid_file = NowPlaying::parse_file("./does_not_exist.mp3");
+            let binding = format!("{}/does_not_exist.mp3", TEST_DATA);
+            let path = binding.as_str();
+
+            let invalid_file = NowPlaying::parse_file(path);
             assert!(invalid_file.is_err());
         }
     }
