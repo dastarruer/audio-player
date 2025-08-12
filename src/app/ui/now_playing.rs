@@ -53,8 +53,13 @@ mod test {
         }
 
         #[test]
-        fn parse_valid_flac_file() {
+        fn parse_valid_ogg_file() {
             assert_metadata("test.flac", "less than lovers", "Kensuke Ushio");
+        }
+
+        #[test]
+        fn parse_valid_wav_file() {
+            assert_metadata("test.wav", "less than lovers", "Kensuke Ushio");
         }
 
         #[test]
