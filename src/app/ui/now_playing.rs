@@ -85,7 +85,7 @@ mod test {
 
         #[test]
         fn parse_no_metadata_mp3_file() {
-            assert_no_metadata("test_clean.mp3");
+            assert_no_metadata("test_no_metadata.mp3");
         }
 
         #[test]
