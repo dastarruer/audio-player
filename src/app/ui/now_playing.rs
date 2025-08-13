@@ -14,10 +14,11 @@ impl NowPlaying {
         let img = SharedImage::load("test.png").expect("Could not load image");
 
         // Create a Frame to hold the image
-        let mut frame = Frame::new(0, 0, 5, 5, "");
+        let mut frame = Frame::new(0, 0, 100, 100, "");
 
         // Assign the image to the frame
-        frame.set_image(Some(img));
+        // Use set_image_scaled so that the image scales to the widget's size
+        frame.set_image_scaled(Some(img));
 
         NowPlaying {}
     }
