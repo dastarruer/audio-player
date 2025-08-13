@@ -41,6 +41,9 @@
           pkg-config
           rust-analyzer
 
+          # Needed for large test files
+          git-lfs
+
           # rodio dependencies
           alsa-lib
 
