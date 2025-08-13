@@ -13,6 +13,8 @@ use ui::playback_buttons::PlaybackButtons;
 
 use crate::app::ui::progress_bar::ProgressBar;
 
+use crate::app::ui::now_playing::{self, NowPlaying};
+
 /// A message to be sent to the audio thread
 #[derive(Debug, PartialEq)]
 enum Message {
@@ -35,6 +37,9 @@ pub struct AudioApp {
 
     /// An AudioHandler, which will handle audio related functions such as playing audio.
     audio_handler: AudioHandler,
+
+    /// The section that shows the user what is currently playing
+    now_playing: NowPlaying,
 }
 
 impl AudioApp {
@@ -49,12 +54,15 @@ impl AudioApp {
         // Create a new window
         let window = AudioApp::create_window();
 
+        let now_playing = NowPlaying::new();
+
         AudioApp {
             app,
             window,
             playback_buttons: None,
             progress_bar: None,
             audio_handler,
+            now_playing,
         }
     }
 
