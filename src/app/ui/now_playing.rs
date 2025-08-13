@@ -46,7 +46,7 @@ mod test {
 
         /// A testing function to check that the metadata for an audio file is being parsed properly
         fn assert_metadata(filename: &str, expected_title: &str, expected_artist: &str) {
-            let full_path = format!("{}/{}", TEST_DATA, filename);
+            let full_path = format!("{}/with-metadata/{}", TEST_DATA, filename);
             let primary_tag = NowPlaying::parse_file(&full_path).unwrap();
 
             assert_eq!(primary_tag.title().unwrap(), expected_title);
@@ -55,7 +55,7 @@ mod test {
 
         /// Check that a file with no metadata returns the correct error
         fn assert_no_metadata(filename: &str) {
-            let full_path = format!("{}/{}", TEST_DATA, filename);
+            let full_path = format!("{}/without-metadata/{}", TEST_DATA, filename);
             let result = NowPlaying::parse_file(&full_path);
 
             assert!(result.is_err());
@@ -85,17 +85,17 @@ mod test {
 
         #[test]
         fn parse_no_metadata_mp3_file() {
-            assert_no_metadata("test_no_metadata.mp3");
+            assert_no_metadata("test.mp3");
         }
 
         #[test]
         fn parse_no_metadata_ogg_file() {
-            assert_no_metadata("test_no_metadata.ogg");
+            assert_no_metadata("test.ogg");
         }
 
         #[test]
         fn parse_no_metadata_wav_file() {
-            assert_no_metadata("test_no_metadata.wav");
+            assert_no_metadata("test.wav");
         }
 
         #[test]
