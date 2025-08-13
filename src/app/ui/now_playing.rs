@@ -1,12 +1,24 @@
+use fltk::frame::Frame;
+use fltk::image::SharedImage;
+use fltk::prelude::{WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 
-struct NowPlaying {}
+pub struct NowPlaying {}
 
 impl NowPlaying {
     pub fn new() -> NowPlaying {
+        // Load image from file
+        let img = SharedImage::load("test.png").expect("Could not load image");
+
+        // Create a Frame to hold the image
+        let mut frame = Frame::new(0, 0, 5, 5, "");
+
+        // Assign the image to the frame
+        frame.set_image(Some(img));
+
         NowPlaying {}
     }
 
