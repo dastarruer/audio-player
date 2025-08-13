@@ -48,6 +48,21 @@ mod test {
             assert_eq!(primary_tag.artist().unwrap(), expected_artist);
         }
 
+        /// Check that a file with no metadata returns the correct error
+        fn assert_no_metadata(filename: &str) {
+            let full_path = format!("{}/{}", TEST_DATA, filename);
+            let result = NowPlaying::parse_file(&full_path);
+
+            assert!(result.is_err());
+
+            if let Err(err) = result {
+                match err.kind() {
+                    ErrorKind::FakeTag => (),
+                    _ => panic!("Error was incorrect: {:?}", err.kind()),
+                }
+            }
+        }
+
         #[test]
         fn parse_valid_mp3_file() {
             assert_metadata("test.mp3", "less than lovers", "Kensuke Ushio");
@@ -61,6 +76,11 @@ mod test {
         #[test]
         fn parse_valid_wav_file() {
             assert_metadata("test.wav", "less than lovers", "Kensuke Ushio");
+        }
+
+        #[test]
+        fn parse_no_metadata_mp3_file() {
+            assert_no_metadata("test_no_metadata.mp3");
         }
 
         #[test]
