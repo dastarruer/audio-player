@@ -1,7 +1,7 @@
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::read_from_path;
-use lofty::tag::Tag;
+use lofty::tag::{Accessor, Tag};
 
 struct NowPlaying {}
 
@@ -24,6 +24,11 @@ impl NowPlaying {
             .primary_tag()
             .or_else(|| tagged_file.first_tag())
             .ok_or_else(|| LoftyError::new(ErrorKind::FakeTag))?;
+
+        // Fail if no title or no artist
+        if tag.title().is_none() || tag.artist().is_none() {
+            return Err(LoftyError::new(ErrorKind::FakeTag));
+        }
 
         Ok(tag.clone())
     }
@@ -80,7 +85,7 @@ mod test {
 
         #[test]
         fn parse_no_metadata_mp3_file() {
-            assert_no_metadata("test_no_metadata.mp3");
+            assert_no_metadata("test_clean.mp3");
         }
 
         #[test]
