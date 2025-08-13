@@ -89,6 +89,16 @@ mod test {
         }
 
         #[test]
+        fn parse_no_metadata_ogg_file() {
+            assert_no_metadata("test_no_metadata.ogg");
+        }
+
+        #[test]
+        fn parse_no_metadata_wav_file() {
+            assert_no_metadata("test_no_metadata.wav");
+        }
+
+        #[test]
         fn parse_non_existent_file() {
             let binding = format!("{}/does_not_exist.mp3", TEST_DATA);
             let path = binding.as_str();
