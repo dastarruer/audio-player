@@ -62,7 +62,7 @@ impl NowPlaying {
     /// - The mime type is not `MimeType::Png` or `MimeType::Jpeg`
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
         // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
-        let default_cover_path = Path::new("./default.png");
+        let default_cover_path = Path::new("assets/default.png");
 
         // If there are no pictures, return the default cover
         if tag.picture_count() == 0 {
@@ -225,7 +225,7 @@ mod test {
             F: Fn() -> SharedImage,
         {
             let img = test();
-            let expected_img = SharedImage::load("./default.png").unwrap();
+            let expected_img = SharedImage::load("./assets/default.png").unwrap();
 
             assert_eq!(expected_img.width(), img.width());
             assert_eq!(expected_img.height(), img.height());
