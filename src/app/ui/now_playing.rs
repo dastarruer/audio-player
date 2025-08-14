@@ -342,5 +342,47 @@ mod test {
             assert_eq!(expected_img.height(), img.height());
             assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
         }
+
+        #[test]
+        fn test_multiple_cover_image_types() {
+            let relative_artist_picture_path =
+                format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
+
+            let full_artist_picture_path = Path::new(&relative_artist_picture_path)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            // The tag type shouldn't matter
+            let mut tag = Tag::new(TagType::Id3v2);
+
+            // Create artist picture. This should not be returned
+            let artist_picture = create_picture(
+                full_artist_picture_path,
+                MimeType::Jpeg,
+                PictureType::Artist,
+            );
+            tag.push_picture(artist_picture);
+
+            let relative_cover_path = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
+
+            let full_cover_path = Path::new(&relative_cover_path)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            // Create front cover. This should be returned
+            let front_cover = create_picture(
+                full_cover_path.clone(),
+                MimeType::Png,
+                PictureType::CoverFront,
+            );
+            tag.push_picture(front_cover);
+
+            let expected_img = SharedImage::load(full_cover_path).unwrap();
+            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+
+            assert_eq!(expected_img.width(), img.width());
+            assert_eq!(expected_img.height(), img.height());
+            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+        }
     }
 }
