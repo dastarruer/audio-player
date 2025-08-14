@@ -5,7 +5,7 @@ use fltk::image::{JpegImage, PngImage, SharedImage};
 use fltk::prelude::{FltkError, WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
-use lofty::picture::MimeType;
+use lofty::picture::{MimeType, PictureType};
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 
@@ -68,7 +68,18 @@ impl NowPlaying {
             return SharedImage::load(default_cover_path).unwrap();
         }
 
-        let cover = tag.pictures().first().unwrap();
+        let cover = tag
+            .pictures()
+            .iter()
+            .find(|picture| picture.pic_type() == PictureType::CoverFront);
+
+        // Unwrap if there is a front cover, otherwise just return the default cover
+        let cover = if cover.is_some() {
+            cover.unwrap()
+        } else {
+            return SharedImage::load(default_cover_path).unwrap();
+        };
+
         let cover_bytes = cover.data();
 
         // Return different SharedImage's depending on what filetype the cover is
@@ -256,6 +267,31 @@ mod test {
                     None,
                     data,
                 );
+
+                tag.push_picture(front_cover);
+
+                NowPlaying::extract_cover_image_from_tag(&tag)
+            });
+        }
+
+        #[test]
+        fn test_no_cover_image() {
+            assert_default_cover_is_returned(|| {
+                let relative_path_cover =
+                    format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
+
+                let full_path_cover = Path::new(&relative_path_cover)
+                    .canonicalize()
+                    .expect("Failed to resolve absolute path");
+
+                let mut tag = Tag::new(TagType::Id3v2);
+
+                // Read the file bytes
+                let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+
+                // Add an artist picture. This should not get returned
+                let front_cover =
+                    Picture::new_unchecked(PictureType::Artist, Some(MimeType::Jpeg), None, data);
 
                 tag.push_picture(front_cover);
 
