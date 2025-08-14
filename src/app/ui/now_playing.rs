@@ -172,9 +172,9 @@ mod test {
             let expected_img = SharedImage::load(full_path_cover).unwrap();
             let img = NowPlaying::extract_cover_image_from_tag(&tag);
 
-            // I don't know how to compare the bytes so for now I will test the width and height
             assert_eq!(expected_img.width(), img.width());
             assert_eq!(expected_img.height(), img.height());
+            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
         }
     }
 }
