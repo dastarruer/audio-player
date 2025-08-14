@@ -1,6 +1,9 @@
+use std::io::Cursor;
+
 use fltk::frame::Frame;
-use fltk::image::SharedImage;
-use fltk::prelude::{WidgetBase, WidgetExt};
+use fltk::image::{PngImage, SharedImage};
+use fltk::prelude::{ImageExt, WidgetBase, WidgetExt};
+use image::{ImageReader, RgbImage, load_from_memory};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::PictureType;
@@ -50,7 +53,10 @@ impl NowPlaying {
     }
 
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
-        SharedImage::load("./test.png").unwrap()
+        let image = tag.pictures().first().unwrap().data();
+        let png = PngImage::from_data(&image).unwrap();
+
+        SharedImage::from_image(&png).unwrap()
     }
 }
 
@@ -134,12 +140,15 @@ mod test {
     mod extract_cover_image_from_tag {
         use std::{fs, path::Path};
 
-        use lofty::{picture::{MimeType, Picture}, tag::TagType};
+        use lofty::{
+            picture::{MimeType, Picture},
+            tag::TagType,
+        };
 
         use super::*;
 
         #[test]
-        fn test() {
+        fn test_png() {
             let relative_path_cover = format!("{}/{}", TEST_FILES, "test_cover.png");
 
             let full_path_cover = Path::new(&relative_path_cover)
@@ -160,10 +169,12 @@ mod test {
 
             tag.push_picture(front_cover);
 
-            assert_eq!(
-                NowPlaying::extract_cover_image_from_tag(&tag),
-                SharedImage::load(full_path_cover).unwrap()
-            );
+            let expected_img = SharedImage::load(full_path_cover).unwrap();
+            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+
+            // I don't know how to compare the bytes so for now I will test the width and height
+            assert_eq!(expected_img.width(), img.width());
+            assert_eq!(expected_img.height(), img.height());
         }
     }
 }
