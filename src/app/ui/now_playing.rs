@@ -155,23 +155,20 @@ mod test {
 
         use super::*;
 
-        #[test]
-        fn test_png() {
-            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
+        fn assert_test_cover_correct(filename: &str, mime_type: MimeType) {
+            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, filename);
 
             let full_path_cover = Path::new(&relative_path_cover)
                 .canonicalize()
                 .expect("Failed to resolve absolute path");
 
+            // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
 
-            // Add a front cover
             // Read the file bytes
             let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
 
-            // Infer MIME type from extension
-            let mime_type = MimeType::Png;
-
+            // Add a front cover
             let front_cover =
                 Picture::new_unchecked(PictureType::CoverFront, Some(mime_type), None, data);
 
@@ -186,33 +183,13 @@ mod test {
         }
 
         #[test]
+        fn test_png() {
+            assert_test_cover_correct("test_cover.png", MimeType::Png);
+        }
+
+        #[test]
         fn test_jpg() {
-            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
-
-            let full_path_cover = Path::new(&relative_path_cover)
-                .canonicalize()
-                .expect("Failed to resolve absolute path");
-
-            let mut tag = Tag::new(TagType::Id3v2);
-
-            // Add a front cover
-            // Read the file bytes
-            let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
-
-            // Infer MIME type from extension
-            let mime_type = MimeType::Jpeg;
-
-            let front_cover =
-                Picture::new_unchecked(PictureType::CoverFront, Some(mime_type), None, data);
-
-            tag.push_picture(front_cover);
-
-            let expected_img = SharedImage::load(full_path_cover).unwrap();
-            let img = NowPlaying::extract_cover_image_from_tag(&tag);
-
-            assert_eq!(expected_img.width(), img.width());
-            assert_eq!(expected_img.height(), img.height());
-            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+            assert_test_cover_correct("test_cover.jpg", MimeType::Jpeg);
         }
     }
 }
