@@ -1,12 +1,8 @@
-use std::io::Cursor;
-
 use fltk::frame::Frame;
 use fltk::image::{PngImage, SharedImage};
-use fltk::prelude::{ImageExt, WidgetBase, WidgetExt};
-use image::{ImageReader, RgbImage, load_from_memory};
+use fltk::prelude::{WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
-use lofty::picture::PictureType;
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 
