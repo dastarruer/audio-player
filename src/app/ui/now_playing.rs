@@ -1,9 +1,8 @@
-use std::fmt::Error;
 
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
-use fltk::prelude::{FltkError, ImageExt, WidgetBase, WidgetExt};
-use lofty::error::{ErrorKind, Id3v2ErrorKind, LoftyError};
+use fltk::prelude::{FltkError, WidgetBase, WidgetExt};
+use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::MimeType;
 use lofty::read_from_path;
