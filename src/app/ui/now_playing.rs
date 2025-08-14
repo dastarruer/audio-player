@@ -73,8 +73,8 @@ impl NowPlaying {
             .find(|picture| picture.pic_type() == PictureType::CoverFront);
 
         // Unwrap if there is a front cover, otherwise just return the default cover
-        let cover = if cover.is_some() {
-            cover.unwrap()
+        let cover = if let Some(cover) = cover {
+            cover
         } else {
             return SharedImage::load(default_cover_path).unwrap();
         };
