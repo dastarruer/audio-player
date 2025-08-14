@@ -1,8 +1,9 @@
 use fltk::frame::Frame;
-use fltk::image::{PngImage, SharedImage};
-use fltk::prelude::{WidgetBase, WidgetExt};
+use fltk::image::{JpegImage, PngImage, SharedImage};
+use fltk::prelude::{ImageExt, WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
+use lofty::picture::MimeType;
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 
@@ -49,10 +50,19 @@ impl NowPlaying {
     }
 
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
-        let image = tag.pictures().first().unwrap().data();
-        let png = PngImage::from_data(&image).unwrap();
+        let cover = tag.pictures().first().unwrap();
+        let cover_bytes = cover.data();
 
-        SharedImage::from_image(&png).unwrap()
+        // Return different SharedImage's depending on what filetype the cover is
+        match cover.mime_type().unwrap() {
+            MimeType::Png => {
+                SharedImage::from_image(&PngImage::from_data(cover_bytes).unwrap()).unwrap()
+            }
+            MimeType::Jpeg => {
+                SharedImage::from_image(&JpegImage::from_data(cover_bytes).unwrap()).unwrap()
+            }
+            _ => panic!("Unsupported mime type"),
+        }
     }
 }
 
@@ -61,6 +71,7 @@ mod test {
     use super::*;
 
     const TEST_FILES: &str = "./src/app/ui/tests/files";
+
     mod parse_file {
         use std::path::Path;
 
@@ -136,8 +147,9 @@ mod test {
     mod extract_cover_image_from_tag {
         use std::{fs, path::Path};
 
+        use fltk::prelude::ImageExt;
         use lofty::{
-            picture::{MimeType, Picture},
+            picture::{MimeType, Picture, PictureType},
             tag::TagType,
         };
 
@@ -145,7 +157,7 @@ mod test {
 
         #[test]
         fn test_png() {
-            let relative_path_cover = format!("{}/{}", TEST_FILES, "test_cover.png");
+            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
 
             let full_path_cover = Path::new(&relative_path_cover)
                 .canonicalize()
@@ -159,6 +171,36 @@ mod test {
 
             // Infer MIME type from extension
             let mime_type = MimeType::Png;
+
+            let front_cover =
+                Picture::new_unchecked(PictureType::CoverFront, Some(mime_type), None, data);
+
+            tag.push_picture(front_cover);
+
+            let expected_img = SharedImage::load(full_path_cover).unwrap();
+            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+
+            assert_eq!(expected_img.width(), img.width());
+            assert_eq!(expected_img.height(), img.height());
+            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+        }
+
+        #[test]
+        fn test_jpg() {
+            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
+
+            let full_path_cover = Path::new(&relative_path_cover)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            let mut tag = Tag::new(TagType::Id3v2);
+
+            // Add a front cover
+            // Read the file bytes
+            let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+
+            // Infer MIME type from extension
+            let mime_type = MimeType::Jpeg;
 
             let front_cover =
                 Picture::new_unchecked(PictureType::CoverFront, Some(mime_type), None, data);
