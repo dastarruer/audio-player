@@ -3,21 +3,25 @@ use fltk::image::SharedImage;
 use fltk::prelude::{WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
+use lofty::picture::PictureType;
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 
 pub struct NowPlaying {}
 
 impl NowPlaying {
-    pub fn new() -> NowPlaying {
-        // Load image from file
-        let img = SharedImage::load("test.png").expect("Could not load image");
+    pub fn new(path: &str) -> NowPlaying {
+        let mut cover_image_widget = Frame::new(0, 0, 100, 100, "");
 
-        let mut frame = Frame::new(0, 0, 100, 100, "");
+        let metadata_tag = NowPlaying::parse_file(path).unwrap();
+        let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
+
+        // Load image from file
+        let img = SharedImage::from_image(&cover_image).expect("Could not load image");
 
         // Assign the image to the frame
         // Use set_image_scaled so that the image scales to the widget's size
-        frame.set_image_scaled(Some(img));
+        cover_image_widget.set_image_scaled(Some(img));
 
         NowPlaying {}
     }
@@ -28,7 +32,7 @@ impl NowPlaying {
     /// - If `path` does not exist
     /// - If the reader contains invalid data
     /// - If the audio file does not contain a primary tag or a first tag
-    pub fn parse_file(path: &str) -> Result<Tag, LoftyError> {
+    fn parse_file(path: &str) -> Result<Tag, LoftyError> {
         let tagged_file = read_from_path(path)?;
 
         // Get the primary tag, and if primary tag is not found, fall back to first tag
@@ -44,6 +48,10 @@ impl NowPlaying {
 
         Ok(tag.clone())
     }
+
+    fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
+        SharedImage::load("./test.png").unwrap()
+    }
 }
 
 #[cfg(test)]
@@ -56,7 +64,7 @@ mod test {
         use super::*;
         use lofty::tag::Accessor;
 
-        const TEST_DATA: &str = "./src/app/ui/test_files";
+        const TEST_DATA: &str = "./src/app/ui/tests/files/audio";
 
         /// A testing function to check that the metadata for an audio file is being parsed properly
         fn assert_metadata(filename: &str, expected_title: &str, expected_artist: &str) {
@@ -121,6 +129,19 @@ mod test {
 
             let invalid_file = NowPlaying::parse_file(path);
             assert!(invalid_file.is_err());
+        }
+    }
+
+    mod extract_cover_image_from_tag {
+        use lofty::tag::TagType;
+
+        use super::*;
+
+        #[test]
+        fn test_something() {
+            let tag = Tag::new(TagType::Id3v2);
+
+            assert_eq!(1, 1);
         }
     }
 }
