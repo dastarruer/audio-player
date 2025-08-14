@@ -58,17 +58,16 @@ impl NowPlaying {
 mod test {
     use super::*;
 
+    const TEST_FILES: &str = "./src/app/ui/tests/files";
     mod parse_file {
         use std::path::Path;
 
         use super::*;
         use lofty::tag::Accessor;
 
-        const TEST_DATA: &str = "./src/app/ui/tests/files/audio";
-
         /// A testing function to check that the metadata for an audio file is being parsed properly
         fn assert_metadata(filename: &str, expected_title: &str, expected_artist: &str) {
-            let relative_path = format!("{}/with-metadata/{}", TEST_DATA, filename);
+            let relative_path = format!("{}/audio/with-metadata/{}", TEST_FILES, filename);
 
             let full_path = Path::new(&relative_path)
                 .canonicalize()
@@ -84,7 +83,7 @@ mod test {
 
         /// Check that a file with no metadata returns the correct error
         fn assert_no_metadata(filename: &str) {
-            let relative_path = format!("{}/without-metadata/{}", TEST_DATA, filename);
+            let relative_path = format!("{}/audio/without-metadata/{}", TEST_FILES, filename);
 
             let full_path = Path::new(&relative_path)
                 .canonicalize()
@@ -124,7 +123,7 @@ mod test {
 
         #[test]
         fn parse_non_existent_file() {
-            let binding = format!("{}/does_not_exist.mp3", TEST_DATA);
+            let binding = format!("{}/does_not_exist.mp3", TEST_FILES);
             let path = binding.as_str();
 
             let invalid_file = NowPlaying::parse_file(path);
@@ -133,15 +132,38 @@ mod test {
     }
 
     mod extract_cover_image_from_tag {
-        use lofty::tag::TagType;
+        use std::path::Path;
+
+        use lofty::{
+            picture::{MimeType, Picture},
+            tag::TagType,
+        };
 
         use super::*;
 
         #[test]
         fn test_something() {
-            let tag = Tag::new(TagType::Id3v2);
+            let relative_path_cover = format!("{}/{}", TEST_FILES, "test_cover.png");
 
-            assert_eq!(1, 1);
+            let full_path_cover = Path::new(&relative_path_cover)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            let mut tag = Tag::new(TagType::Id3v2);
+
+            // Add a front cover
+            let front_cover = Picture::new_unchecked(
+                PictureType::CoverFront,
+                Some(MimeType::Png),
+                None,
+                Vec::new(),
+            );
+            tag.push_picture(front_cover);
+
+            assert_eq!(
+                NowPlaying::extract_cover_image_from_tag(&tag),
+                SharedImage::load(full_path_cover).unwrap()
+            );
         }
     }
 }
