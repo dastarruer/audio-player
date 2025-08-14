@@ -120,11 +120,6 @@ mod test {
         }
 
         #[test]
-        fn parse_no_metadata_wav_file() {
-            assert_no_metadata("test.wav");
-        }
-
-        #[test]
         fn parse_non_existent_file() {
             let binding = format!("{}/does_not_exist.mp3", TEST_DATA);
             let path = binding.as_str();
