@@ -13,7 +13,7 @@ use ui::playback_buttons::PlaybackButtons;
 
 use crate::app::ui::progress_bar::ProgressBar;
 
-use crate::app::ui::now_playing::{self, NowPlaying};
+use crate::app::ui::now_playing::NowPlaying;
 
 /// A message to be sent to the audio thread
 #[derive(Debug, PartialEq)]
@@ -54,7 +54,8 @@ impl AudioApp {
         // Create a new window
         let window = AudioApp::create_window();
 
-        let now_playing = NowPlaying::new("/home/dastarruer/Documents/coding/rust/audio_player/test.mp3");
+        let now_playing =
+            NowPlaying::new("/home/dastarruer/Documents/coding/rust/audio_player/test.mp3");
 
         AudioApp {
             app,
