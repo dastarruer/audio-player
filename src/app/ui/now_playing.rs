@@ -298,5 +298,47 @@ mod test {
                 NowPlaying::extract_cover_image_from_tag(&tag)
             });
         }
+
+        #[test]
+        fn test_multiple_cover_images() {
+            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
+
+            let full_path_expected_cover = Path::new(&relative_path_cover)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            // The tag type shouldn't matter
+            let mut tag = Tag::new(TagType::Id3v2);
+
+            // Read the file bytes
+            let data = fs::read(full_path_expected_cover.clone()).expect("Failed to read image file");
+
+            // Create first front cover. This is the one that should be returned
+            let expected_front_cover =
+                Picture::new_unchecked(PictureType::CoverFront, Some(MimeType::Jpeg), None, data);
+
+            tag.push_picture(expected_front_cover);
+
+            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
+
+            let full_path_cover = Path::new(&relative_path_cover)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+
+            // Create second front cover. This should not be returned
+            let front_cover =
+                Picture::new_unchecked(PictureType::CoverFront, Some(MimeType::Png), None, data);
+
+            tag.push_picture(front_cover);
+
+            let expected_img = SharedImage::load(full_path_expected_cover).unwrap();
+            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+
+            assert_eq!(expected_img.width(), img.width());
+            assert_eq!(expected_img.height(), img.height());
+            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+        }
     }
 }
