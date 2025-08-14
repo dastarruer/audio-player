@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
 use fltk::prelude::{WidgetBase, WidgetExt};
@@ -60,7 +62,7 @@ impl NowPlaying {
     /// - The mime type is not `MimeType::Png` or `MimeType::Jpeg`
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
         // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
-        let default_cover_path = "./default.png";
+        let default_cover_path = Path::new("./default.png");
 
         // If there are no pictures, return the default cover
         if tag.picture_count() == 0 {
