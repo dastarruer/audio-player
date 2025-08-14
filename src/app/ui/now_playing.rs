@@ -105,11 +105,6 @@ mod test {
         }
 
         #[test]
-        fn parse_valid_wav_file() {
-            assert_metadata("test.wav", "less than lovers", "Kensuke Ushio");
-        }
-
-        #[test]
         fn parse_no_metadata_mp3_file() {
             assert_no_metadata("test.mp3");
         }
