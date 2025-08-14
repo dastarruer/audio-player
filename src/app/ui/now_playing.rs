@@ -13,7 +13,6 @@ impl NowPlaying {
         // Load image from file
         let img = SharedImage::load("test.png").expect("Could not load image");
 
-        // Create a Frame to hold the image
         let mut frame = Frame::new(0, 0, 100, 100, "");
 
         // Assign the image to the frame
@@ -52,6 +51,8 @@ mod test {
     use super::*;
 
     mod parse_file {
+        use std::path::Path;
+
         use super::*;
         use lofty::tag::Accessor;
 
@@ -59,17 +60,29 @@ mod test {
 
         /// A testing function to check that the metadata for an audio file is being parsed properly
         fn assert_metadata(filename: &str, expected_title: &str, expected_artist: &str) {
-            let full_path = format!("{}/with-metadata/{}", TEST_DATA, filename);
-            let primary_tag = NowPlaying::parse_file(&full_path).unwrap();
+            let relative_path = format!("{}/with-metadata/{}", TEST_DATA, filename);
+
+            let full_path = Path::new(&relative_path)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            let primary_tag = NowPlaying::parse_file(full_path.to_str().unwrap()).unwrap();
 
             assert_eq!(primary_tag.title().unwrap(), expected_title);
             assert_eq!(primary_tag.artist().unwrap(), expected_artist);
+
+            assert_ne!(primary_tag.picture_count(), 0);
         }
 
         /// Check that a file with no metadata returns the correct error
         fn assert_no_metadata(filename: &str) {
-            let full_path = format!("{}/without-metadata/{}", TEST_DATA, filename);
-            let result = NowPlaying::parse_file(&full_path);
+            let relative_path = format!("{}/without-metadata/{}", TEST_DATA, filename);
+
+            let full_path = Path::new(&relative_path)
+                .canonicalize()
+                .expect("Failed to resolve absolute path");
+
+            let result = NowPlaying::parse_file(full_path.to_str().unwrap());
 
             assert!(result.is_err());
 
