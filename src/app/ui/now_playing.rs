@@ -1,8 +1,6 @@
-use std::path::Path;
-
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
-use fltk::prelude::{FltkError, WidgetBase, WidgetExt};
+use fltk::prelude::{WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::{MimeType, PictureType};
