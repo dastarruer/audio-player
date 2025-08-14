@@ -132,17 +132,14 @@ mod test {
     }
 
     mod extract_cover_image_from_tag {
-        use std::path::Path;
+        use std::{fs, path::Path};
 
-        use lofty::{
-            picture::{MimeType, Picture},
-            tag::TagType,
-        };
+        use lofty::{picture::{MimeType, Picture}, tag::TagType};
 
         use super::*;
 
         #[test]
-        fn test_something() {
+        fn test() {
             let relative_path_cover = format!("{}/{}", TEST_FILES, "test_cover.png");
 
             let full_path_cover = Path::new(&relative_path_cover)
@@ -152,12 +149,15 @@ mod test {
             let mut tag = Tag::new(TagType::Id3v2);
 
             // Add a front cover
-            let front_cover = Picture::new_unchecked(
-                PictureType::CoverFront,
-                Some(MimeType::Png),
-                None,
-                Vec::new(),
-            );
+            // Read the file bytes
+            let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+
+            // Infer MIME type from extension
+            let mime_type = MimeType::Png;
+
+            let front_cover =
+                Picture::new_unchecked(PictureType::CoverFront, Some(mime_type), None, data);
+
             tag.push_picture(front_cover);
 
             assert_eq!(
