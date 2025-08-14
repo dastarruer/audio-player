@@ -199,15 +199,20 @@ mod test {
             Picture::new_unchecked(pic_type, Some(mime_type), None, data)
         }
 
-        fn assert_test_cover_correct(filename: &str, mime_type: MimeType, pic_type: PictureType) {
+        fn get_test_cover_path(filename: &str) -> PathBuf {
             let relative_cover_path = format!("{}/images/covers/{}", TEST_FILES, filename);
 
-            let full_cover_path = Path::new(&relative_cover_path)
+            // Return the full file path
+            Path::new(&relative_cover_path)
                 .canonicalize()
-                .expect("Failed to resolve absolute path");
+                .expect("Failed to resolve absolute path")
+        }
 
+        fn assert_test_cover_correct(filename: &str, mime_type: MimeType, pic_type: PictureType) {
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
+
+            let full_cover_path = get_test_cover_path(filename);
 
             let front_cover = create_picture(full_cover_path.clone(), mime_type, pic_type);
             tag.push_picture(front_cover);
@@ -282,12 +287,7 @@ mod test {
         #[test]
         fn test_no_cover_image() {
             assert_default_cover_is_returned(|| {
-                let relative_path_cover =
-                    format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
-
-                let full_path_cover = Path::new(&relative_path_cover)
-                    .canonicalize()
-                    .expect("Failed to resolve absolute path");
+                let full_path_cover = get_test_cover_path("test_cover.jpg");
 
                 let mut tag = Tag::new(TagType::Id3v2);
 
@@ -306,38 +306,30 @@ mod test {
 
         #[test]
         fn test_multiple_cover_images() {
-            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
-
-            let full_path_expected_cover = Path::new(&relative_path_cover)
-                .canonicalize()
-                .expect("Failed to resolve absolute path");
+            let full_expected_cover_path = get_test_cover_path("test_cover.jpg");
 
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
 
             // Create first front cover. This is the one that should be returned
             let expected_front_cover = create_picture(
-                full_path_expected_cover.clone(),
+                full_expected_cover_path.clone(),
                 MimeType::Jpeg,
                 PictureType::CoverFront,
             );
             tag.push_picture(expected_front_cover);
 
-            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
-
-            let full_path_cover = Path::new(&relative_path_cover)
-                .canonicalize()
-                .expect("Failed to resolve absolute path");
+            let full_cover_path = get_test_cover_path("test_cover.png");
 
             // Create second front cover. This should not be returned
             let front_cover = create_picture(
-                full_path_cover.clone(),
+                full_cover_path.clone(),
                 MimeType::Jpeg,
                 PictureType::CoverFront,
             );
             tag.push_picture(front_cover);
 
-            let expected_img = SharedImage::load(full_path_expected_cover).unwrap();
+            let expected_img = SharedImage::load(full_expected_cover_path).unwrap();
             let img = NowPlaying::extract_cover_image_from_tag(&tag);
 
             assert_eq!(expected_img.width(), img.width());
@@ -347,12 +339,7 @@ mod test {
 
         #[test]
         fn test_multiple_cover_image_types() {
-            let relative_artist_picture_path =
-                format!("{}/images/covers/{}", TEST_FILES, "test_cover.jpg");
-
-            let full_artist_picture_path = Path::new(&relative_artist_picture_path)
-                .canonicalize()
-                .expect("Failed to resolve absolute path");
+            let full_artist_picture_path = get_test_cover_path("test_cover.jpg");
 
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
@@ -365,11 +352,7 @@ mod test {
             );
             tag.push_picture(artist_picture);
 
-            let relative_cover_path = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
-
-            let full_cover_path = Path::new(&relative_cover_path)
-                .canonicalize()
-                .expect("Failed to resolve absolute path");
+            let full_cover_path = get_test_cover_path("test_cover.png");
 
             // Create front cover. This should be returned
             let front_cover = create_picture(
