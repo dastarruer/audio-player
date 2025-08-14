@@ -1,11 +1,32 @@
+use std::fmt::Error;
+
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
-use fltk::prelude::{ImageExt, WidgetBase, WidgetExt};
-use lofty::error::{ErrorKind, LoftyError};
+use fltk::prelude::{FltkError, ImageExt, WidgetBase, WidgetExt};
+use lofty::error::{ErrorKind, Id3v2ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::MimeType;
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
+
+/// Used when extracting a cover image from a metadata tag
+#[derive(Debug)]
+enum CoverError {
+    Fltk(FltkError),
+    Lofty(LoftyError),
+}
+
+impl From<LoftyError> for CoverError {
+    fn from(err: LoftyError) -> Self {
+        CoverError::Lofty(err)
+    }
+}
+
+impl From<FltkError> for CoverError {
+    fn from(err: FltkError) -> Self {
+        CoverError::Fltk(err)
+    }
+}
 
 pub struct NowPlaying {}
 
@@ -14,14 +35,13 @@ impl NowPlaying {
         let mut cover_image_widget = Frame::new(0, 0, 100, 100, "");
 
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
-        let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
 
-        // Load image from file
-        let img = SharedImage::from_image(&cover_image).expect("Could not load image");
+        // Extract the image from the metadata tag
+        let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag).unwrap();
 
         // Assign the image to the frame
         // Use set_image_scaled so that the image scales to the widget's size
-        cover_image_widget.set_image_scaled(Some(img));
+        cover_image_widget.set_image_scaled(Some(cover_image));
 
         NowPlaying {}
     }
@@ -49,19 +69,29 @@ impl NowPlaying {
         Ok(tag.clone())
     }
 
-    fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
+    fn extract_cover_image_from_tag(tag: &Tag) -> Result<SharedImage, CoverError> {
+        // If there are no pictures, return an error
+        if tag.picture_count() == 0 {
+            return Err(CoverError::Lofty(LoftyError::new(ErrorKind::NotAPicture)));
+        }
+
         let cover = tag.pictures().first().unwrap();
         let cover_bytes = cover.data();
 
         // Return different SharedImage's depending on what filetype the cover is
-        match cover.mime_type().unwrap() {
+        match cover
+            .mime_type()
+            .unwrap_or(&MimeType::Unknown("No mime type".to_string()))
+        {
             MimeType::Png => {
-                SharedImage::from_image(&PngImage::from_data(cover_bytes).unwrap()).unwrap()
+                Ok(SharedImage::from_image(&PngImage::from_data(cover_bytes)?).unwrap())
             }
             MimeType::Jpeg => {
-                SharedImage::from_image(&JpegImage::from_data(cover_bytes).unwrap()).unwrap()
+                Ok(SharedImage::from_image(&JpegImage::from_data(cover_bytes)?).unwrap())
             }
-            _ => panic!("Unsupported mime type"),
+            _ => Err(CoverError::Lofty(LoftyError::new(
+                ErrorKind::UnsupportedPicture,
+            ))),
         }
     }
 }
@@ -175,7 +205,7 @@ mod test {
             tag.push_picture(front_cover);
 
             let expected_img = SharedImage::load(full_path_cover).unwrap();
-            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+            let img = NowPlaying::extract_cover_image_from_tag(&tag).unwrap();
 
             assert_eq!(expected_img.width(), img.width());
             assert_eq!(expected_img.height(), img.height());
@@ -190,6 +220,14 @@ mod test {
         #[test]
         fn test_jpg() {
             assert_test_cover_correct("test_cover.jpg", MimeType::Jpeg);
+        }
+
+        #[test]
+        fn test_non_existent_cover() {
+            let tag = Tag::new(TagType::Id3v2);
+            let err = NowPlaying::extract_cover_image_from_tag(&tag);
+
+            assert!(err.is_err());
         }
     }
 }
