@@ -39,7 +39,7 @@ pub struct AudioApp {
     audio_handler: AudioHandler,
 
     /// The section that shows the user what is currently playing
-    now_playing: NowPlaying,
+    _now_playing: NowPlaying,
 }
 
 impl AudioApp {
@@ -62,7 +62,7 @@ impl AudioApp {
             playback_buttons: None,
             progress_bar: None,
             audio_handler,
-            now_playing,
+            _now_playing: now_playing,
         }
     }
 
