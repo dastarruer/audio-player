@@ -54,7 +54,7 @@ impl AudioApp {
         // Create a new window
         let window = AudioApp::create_window();
 
-        let now_playing = NowPlaying::new();
+        let now_playing = NowPlaying::new("/home/dastarruer/Documents/coding/rust/audio_player/test.mp3");
 
         AudioApp {
             app,
