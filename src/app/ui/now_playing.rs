@@ -261,14 +261,14 @@ mod test {
                 let relative_path_cover =
                     format!("{}/images/covers/{}", TEST_FILES, "test_cover.gif");
 
-                let full_path_cover = Path::new(&relative_path_cover)
+                let full_cover_path = Path::new(&relative_path_cover)
                     .canonicalize()
                     .expect("Failed to resolve absolute path");
 
                 let mut tag = Tag::new(TagType::Id3v2);
 
                 // Read the file bytes
-                let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+                let data = fs::read(full_cover_path.clone()).expect("Failed to read image file");
 
                 // Add a front cover
                 let front_cover = Picture::new_unchecked(
@@ -287,12 +287,12 @@ mod test {
         #[test]
         fn test_no_cover_image() {
             assert_default_cover_is_returned(|| {
-                let full_path_cover = get_test_cover_path("test_cover.jpg");
+                let full_cover_path = get_test_cover_path("test_cover.jpg");
 
                 let mut tag = Tag::new(TagType::Id3v2);
 
                 // Read the file bytes
-                let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+                let data = fs::read(full_cover_path.clone()).expect("Failed to read image file");
 
                 // Add an artist picture. This should not get returned
                 let front_cover =
