@@ -52,7 +52,8 @@ impl NowPlaying {
 
     /// Extract the cover image from a given metadata tag.
     ///
-    /// This function determines what image to show in the Now Playing section of the audio player.
+    /// This function determines what image to show in the Now Playing section
+    /// of the audio player.
     ///
     /// # Returns
     /// A default cover if any of the following conditions is met:
@@ -178,7 +179,10 @@ mod test {
     }
 
     mod extract_cover_image_from_tag {
-        use std::{fs, path::Path};
+        use std::{
+            fs,
+            path::{Path, PathBuf},
+        };
 
         use fltk::prelude::ImageExt;
         use lofty::{
@@ -188,31 +192,32 @@ mod test {
 
         use super::*;
 
-        fn assert_test_cover_correct(filename: &str, mime_type: MimeType) {
-            let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, filename);
+        fn create_picture(path: PathBuf, mime_type: MimeType, pic_type: PictureType) -> Picture {
+            // Read the file bytes
+            let data = fs::read(path).expect("Failed to read image file");
 
-            let full_path_cover = Path::new(&relative_path_cover)
+            Picture::new_unchecked(pic_type, Some(mime_type), None, data)
+        }
+
+        fn assert_test_cover_correct(filename: &str, mime_type: MimeType, pic_type: PictureType) {
+            let relative_cover_path = format!("{}/images/covers/{}", TEST_FILES, filename);
+
+            let full_cover_path = Path::new(&relative_cover_path)
                 .canonicalize()
                 .expect("Failed to resolve absolute path");
 
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
 
-            // Read the file bytes
-            let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
-
-            // Add a front cover
-            let front_cover =
-                Picture::new_unchecked(PictureType::CoverFront, Some(mime_type), None, data);
-
+            let front_cover = create_picture(full_cover_path.clone(), mime_type, pic_type);
             tag.push_picture(front_cover);
 
-            let expected_img = SharedImage::load(full_path_cover).unwrap();
-            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+            let expected_cover = SharedImage::load(full_cover_path).unwrap();
+            let cover = NowPlaying::extract_cover_image_from_tag(&tag);
 
-            assert_eq!(expected_img.width(), img.width());
-            assert_eq!(expected_img.height(), img.height());
-            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+            assert_eq!(expected_cover.width(), cover.width());
+            assert_eq!(expected_cover.height(), cover.height());
+            assert_eq!(expected_cover.to_rgb_data(), cover.to_rgb_data());
         }
 
         fn assert_default_cover_is_returned<F>(test: F)
@@ -229,12 +234,12 @@ mod test {
 
         #[test]
         fn test_png() {
-            assert_test_cover_correct("test_cover.png", MimeType::Png);
+            assert_test_cover_correct("test_cover.png", MimeType::Png, PictureType::CoverFront);
         }
 
         #[test]
         fn test_jpg() {
-            assert_test_cover_correct("test_cover.jpg", MimeType::Jpeg);
+            assert_test_cover_correct("test_cover.jpg", MimeType::Jpeg, PictureType::CoverFront);
         }
 
         #[test]
@@ -310,13 +315,12 @@ mod test {
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
 
-            // Read the file bytes
-            let data = fs::read(full_path_expected_cover.clone()).expect("Failed to read image file");
-
             // Create first front cover. This is the one that should be returned
-            let expected_front_cover =
-                Picture::new_unchecked(PictureType::CoverFront, Some(MimeType::Jpeg), None, data);
-
+            let expected_front_cover = create_picture(
+                full_path_expected_cover.clone(),
+                MimeType::Jpeg,
+                PictureType::CoverFront,
+            );
             tag.push_picture(expected_front_cover);
 
             let relative_path_cover = format!("{}/images/covers/{}", TEST_FILES, "test_cover.png");
@@ -325,12 +329,12 @@ mod test {
                 .canonicalize()
                 .expect("Failed to resolve absolute path");
 
-            let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
-
             // Create second front cover. This should not be returned
-            let front_cover =
-                Picture::new_unchecked(PictureType::CoverFront, Some(MimeType::Png), None, data);
-
+            let front_cover = create_picture(
+                full_path_cover.clone(),
+                MimeType::Jpeg,
+                PictureType::CoverFront,
+            );
             tag.push_picture(front_cover);
 
             let expected_img = SharedImage::load(full_path_expected_cover).unwrap();
