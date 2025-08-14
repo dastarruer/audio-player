@@ -50,6 +50,15 @@ impl NowPlaying {
         Ok(tag.clone())
     }
 
+    /// Extract the cover image from a given metadata tag.
+    ///
+    /// This function determines what image to show in the Now Playing section of the audio player.
+    ///
+    /// # Returns
+    /// A default cover if any of the following conditions is met:
+    /// - There are no images in the tag
+    /// - The mime type does not exist
+    /// - The mime type is not `MimeType::Png` or `MimeType::Jpeg`
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
         // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
         let default_cover_path = "./default.png";
