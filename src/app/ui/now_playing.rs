@@ -1,3 +1,4 @@
+use std::path::Path;
 
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
@@ -8,25 +9,6 @@ use lofty::picture::MimeType;
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 
-/// Used when extracting a cover image from a metadata tag
-#[derive(Debug)]
-enum CoverError {
-    Fltk(FltkError),
-    Lofty(LoftyError),
-}
-
-impl From<LoftyError> for CoverError {
-    fn from(err: LoftyError) -> Self {
-        CoverError::Lofty(err)
-    }
-}
-
-impl From<FltkError> for CoverError {
-    fn from(err: FltkError) -> Self {
-        CoverError::Fltk(err)
-    }
-}
-
 pub struct NowPlaying {}
 
 impl NowPlaying {
@@ -36,7 +18,7 @@ impl NowPlaying {
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
         // Extract the image from the metadata tag
-        let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag).unwrap();
+        let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
 
         // Assign the image to the frame
         // Use set_image_scaled so that the image scales to the widget's size
@@ -68,10 +50,13 @@ impl NowPlaying {
         Ok(tag.clone())
     }
 
-    fn extract_cover_image_from_tag(tag: &Tag) -> Result<SharedImage, CoverError> {
-        // If there are no pictures, return an error
+    fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
+        // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
+        let default_cover_path = "./default.png";
+
+        // If there are no pictures, return the default cover
         if tag.picture_count() == 0 {
-            return Err(CoverError::Lofty(LoftyError::new(ErrorKind::NotAPicture)));
+            return SharedImage::load(default_cover_path).unwrap();
         }
 
         let cover = tag.pictures().first().unwrap();
@@ -83,14 +68,13 @@ impl NowPlaying {
             .unwrap_or(&MimeType::Unknown("No mime type".to_string()))
         {
             MimeType::Png => {
-                Ok(SharedImage::from_image(&PngImage::from_data(cover_bytes)?).unwrap())
+                // Should not panic, because the mime type is determined from the start
+                SharedImage::from_image(&PngImage::from_data(cover_bytes).unwrap()).unwrap()
             }
             MimeType::Jpeg => {
-                Ok(SharedImage::from_image(&JpegImage::from_data(cover_bytes)?).unwrap())
+                SharedImage::from_image(&JpegImage::from_data(cover_bytes).unwrap()).unwrap()
             }
-            _ => Err(CoverError::Lofty(LoftyError::new(
-                ErrorKind::UnsupportedPicture,
-            ))),
+            _ => SharedImage::load(default_cover_path).unwrap(),
         }
     }
 }
@@ -204,7 +188,19 @@ mod test {
             tag.push_picture(front_cover);
 
             let expected_img = SharedImage::load(full_path_cover).unwrap();
-            let img = NowPlaying::extract_cover_image_from_tag(&tag).unwrap();
+            let img = NowPlaying::extract_cover_image_from_tag(&tag);
+
+            assert_eq!(expected_img.width(), img.width());
+            assert_eq!(expected_img.height(), img.height());
+            assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+        }
+
+        fn assert_default_cover_is_returned<F>(test: F)
+        where
+            F: Fn() -> SharedImage,
+        {
+            let img = test();
+            let expected_img = SharedImage::load("./default.png").unwrap();
 
             assert_eq!(expected_img.width(), img.width());
             assert_eq!(expected_img.height(), img.height());
@@ -223,10 +219,39 @@ mod test {
 
         #[test]
         fn test_non_existent_cover() {
-            let tag = Tag::new(TagType::Id3v2);
-            let err = NowPlaying::extract_cover_image_from_tag(&tag);
+            assert_default_cover_is_returned(|| {
+                let tag = Tag::new(TagType::Id3v2);
+                NowPlaying::extract_cover_image_from_tag(&tag)
+            });
+        }
 
-            assert!(err.is_err());
+        #[test]
+        fn test_unsupported_gif_format() {
+            assert_default_cover_is_returned(|| {
+                let relative_path_cover =
+                    format!("{}/images/covers/{}", TEST_FILES, "test_cover.gif");
+
+                let full_path_cover = Path::new(&relative_path_cover)
+                    .canonicalize()
+                    .expect("Failed to resolve absolute path");
+
+                let mut tag = Tag::new(TagType::Id3v2);
+
+                // Read the file bytes
+                let data = fs::read(full_path_cover.clone()).expect("Failed to read image file");
+
+                // Add a front cover
+                let front_cover = Picture::new_unchecked(
+                    PictureType::CoverFront,
+                    Some(MimeType::Gif),
+                    None,
+                    data,
+                );
+
+                tag.push_picture(front_cover);
+
+                NowPlaying::extract_cover_image_from_tag(&tag)
+            });
         }
     }
 }
