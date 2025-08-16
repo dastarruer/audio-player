@@ -27,15 +27,16 @@ impl NowPlaying {
 
     fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) -> Output {
         const FONT: Font = Font::HelveticaBold;
+        const FONTSIZE: i32 = 14;
 
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
         // TODO: Remove getting text width twice
-        draw::set_font(FONT, 14);
+        draw::set_font(FONT, FONTSIZE);
         let (text_width, _) = draw::measure(&title, false);
 
         // Center X position
-        let center_x = NowPlaying::text_center_x_of_widget(cover_widget, &title);
+        let center_x = NowPlaying::text_center_x_of_widget(cover_widget, &title, FONT, FONTSIZE);
         let pos_y = NowPlaying::get_title_widget_y(cover_widget);
 
         let title_widget_width = text_width + 10;
@@ -53,14 +54,16 @@ impl NowPlaying {
 
     fn create_artist_widget(metadata_tag: &Tag, cover_widget: &Frame, title_widget: &Output) {
         const FONT: Font = Font::Helvetica;
+        const FONTSIZE: i32 = 14;
 
         let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
 
         // TODO: Remove getting text width twice
-        draw::set_font(FONT, 14);
+        draw::set_font(FONT, FONTSIZE);
         let (text_width, _) = draw::measure(&artist, false);
 
-        let artist_widget_x = NowPlaying::text_center_x_of_widget(cover_widget, &artist);
+        let artist_widget_x =
+            NowPlaying::text_center_x_of_widget(cover_widget, &artist, FONT, FONTSIZE);
         let artist_widget_y = NowPlaying::get_artist_widget_y(title_widget);
 
         let artist_widget_width = text_width + 10;
@@ -118,8 +121,9 @@ impl NowPlaying {
             .to_string()
     }
 
-    fn text_center_x_of_widget(widget: &Frame, title: &str) -> i32 {
-        draw::set_font(Font::Helvetica, 14); // make sure the font/size matches your widget
+    /// Return the x position of a text box that would be needed to center it over another widget.
+    fn text_center_x_of_widget(widget: &Frame, title: &str, font: Font, fontsize: i32) -> i32 {
+        draw::set_font(font, fontsize);
         let (text_width, _) = draw::measure(title, false);
 
         // Get cover widget position and width
