@@ -13,9 +13,15 @@ pub struct NowPlaying {}
 
 impl NowPlaying {
     pub fn new(path: &str) -> NowPlaying {
-        let mut cover_image_widget = Frame::new(150, 50, 100, 100, "");
-
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
+
+        NowPlaying::create_cover_widget(metadata_tag);
+
+        NowPlaying {}
+    }
+
+    fn create_cover_widget(metadata_tag: Tag) {
+        let mut cover_image_widget = Frame::new(150, 50, 100, 100, "");
 
         // Extract the image from the metadata tag
         let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
@@ -23,8 +29,6 @@ impl NowPlaying {
         // Assign the image to the frame
         // Use set_image_scaled so that the image scales to the widget's size
         cover_image_widget.set_image_scaled(Some(cover_image));
-
-        NowPlaying {}
     }
 
     /// Parse an audio file's metadata, and return the primary tag. If the primary tag is not found, it will return the first tag.
