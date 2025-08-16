@@ -55,6 +55,13 @@ impl NowPlaying {
             .to_string()
     }
 
+    fn extract_artist_from_tag(tag: &Tag) -> String {
+        let default_artist = "No artist";
+        tag.artist()
+            .unwrap_or(Cow::Borrowed(default_artist))
+            .to_string()
+    }
+
     fn get_title_widget_x(cover_widget: &Frame, title: &str) -> i32 {
         draw::set_font(Font::Helvetica, 14); // make sure the font/size matches your widget
         let (text_width, _) = draw::measure(title, false);
@@ -501,7 +508,7 @@ mod test {
             let title = "less than lovers";
 
             let mut tag = Tag::new(lofty::tag::TagType::Id3v2);
-            tag.insert_text(ItemKey::TrackTitle, "less than lovers".to_string());
+            tag.insert_text(ItemKey::TrackTitle, title.to_string());
 
             assert_eq!(NowPlaying::extract_title_from_tag(&tag), title);
         }
@@ -509,6 +516,37 @@ mod test {
         #[test]
         fn extract_title_from_tag_with_no_title() {
             test_default_title_is_returned(|| Tag::new(lofty::tag::TagType::Id3v2));
+        }
+    }
+
+    mod extract_artist_from_tag {
+        use lofty::tag::{ItemKey, Tag};
+
+        use crate::app::ui::now_playing::NowPlaying;
+
+        fn test_default_artist_is_returned<F>(test: F)
+        where
+            F: Fn() -> Tag,
+        {
+            let artist = NowPlaying::extract_artist_from_tag(&test());
+            let expected_artist = "No artist";
+
+            assert_eq!(artist, expected_artist);
+        }
+
+        #[test]
+        fn extract_artist() {
+            let artist = "Kensuke Ushio";
+
+            let mut tag = Tag::new(lofty::tag::TagType::Id3v2);
+            tag.insert_text(ItemKey::TrackArtist, artist.to_string());
+
+            assert_eq!(NowPlaying::extract_artist_from_tag(&tag), artist);
+        }
+
+        #[test]
+        fn extract_artist_from_tag_with_no_artist() {
+            test_default_artist_is_returned(|| Tag::new(lofty::tag::TagType::Id3v2));
         }
     }
 }
