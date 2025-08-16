@@ -48,6 +48,14 @@ impl NowPlaying {
         title_widget.set_frame(FrameType::NoBox);
     }
 
+    /// Extract the title from a given metadata tag.
+    ///
+    /// This function determines what title to show in the Now Playing section
+    /// of the audio player.
+    ///
+    /// # Returns
+    /// A default title if any of the following conditions is met:
+    /// - There is no title in the tag
     fn extract_title_from_tag(tag: &Tag) -> String {
         let default_title = "Untitled audio";
         tag.title()
@@ -55,6 +63,14 @@ impl NowPlaying {
             .to_string()
     }
 
+    /// Extract the artist from a given metadata tag.
+    ///
+    /// This function determines what artist to show in the Now Playing section
+    /// of the audio player.
+    ///
+    /// # Returns
+    /// A default artist if any of the following conditions is met:
+    /// - There is no artist in the tag
     fn extract_artist_from_tag(tag: &Tag) -> String {
         let default_artist = "No artist";
         tag.artist()
