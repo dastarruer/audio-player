@@ -35,7 +35,7 @@ impl NowPlaying {
         let (text_width, _) = draw::measure(&title, false);
 
         // Center X position
-        let center_x = NowPlaying::get_title_widget_x(cover_widget, &title);
+        let center_x = NowPlaying::text_center_x_of_widget(cover_widget, &title);
         let pos_y = NowPlaying::get_title_widget_y(cover_widget);
 
         let title_widget_width = text_width + 10;
@@ -60,16 +60,15 @@ impl NowPlaying {
         draw::set_font(FONT, 14);
         let (text_width, _) = draw::measure(&artist, false);
 
-        // Center X position
-        let center_x = NowPlaying::get_title_widget_x(cover_widget, &artist);
-        let pos_y = NowPlaying::get_artist_widget_y(title_widget);
+        let artist_widget_x = NowPlaying::text_center_x_of_widget(cover_widget, &artist);
+        let artist_widget_y = NowPlaying::get_artist_widget_y(title_widget);
 
         let artist_widget_width = text_width + 10;
         let artist_widget_height = 20;
 
         let mut artist_widget = Output::new(
-            center_x,
-            pos_y,
+            artist_widget_x,
+            artist_widget_y,
             artist_widget_width,
             artist_widget_height,
             "",
@@ -119,13 +118,13 @@ impl NowPlaying {
             .to_string()
     }
 
-    fn get_title_widget_x(cover_widget: &Frame, title: &str) -> i32 {
+    fn text_center_x_of_widget(widget: &Frame, title: &str) -> i32 {
         draw::set_font(Font::Helvetica, 14); // make sure the font/size matches your widget
         let (text_width, _) = draw::measure(title, false);
 
         // Get cover widget position and width
-        let cover_x = cover_widget.x();
-        let cover_w = cover_widget.w();
+        let cover_x = widget.x();
+        let cover_w = widget.w();
 
         // Return centered x position
         cover_x + (cover_w - text_width) / 2
