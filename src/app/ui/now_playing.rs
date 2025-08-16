@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use fltk::draw::{self, height};
+use fltk::draw::{self};
 use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
@@ -11,6 +9,8 @@ use lofty::file::TaggedFileExt;
 use lofty::picture::{MimeType, PictureType};
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
+use std::borrow::Cow;
+use std::path::Path;
 
 pub struct NowPlaying {}
 
@@ -25,9 +25,9 @@ impl NowPlaying {
     }
 
     fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) {
-        let title = metadata_tag.title().unwrap();
+        let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
-        draw::set_font(Font::Helvetica, 14); // make sure the font/size matches your widget
+        draw::set_font(Font::Helvetica, 14); 
         let (text_width, _) = draw::measure(&title, false);
 
         // Center X position
@@ -43,6 +43,11 @@ impl NowPlaying {
         title_widget.set_value(&title);
         title_widget.set_text_font(Font::Helvetica);
         title_widget.set_frame(FrameType::NoBox);
+    }
+
+    fn extract_title_from_tag(tag: &Tag) -> String {
+        let default_title = "Untitled audio";
+        tag.title().unwrap_or(Cow::Borrowed(default_title)).to_string()
     }
 
     fn get_title_widget_x(cover_widget: &Frame, title: &str) -> i32 {
@@ -424,7 +429,11 @@ mod test {
     }
 
     mod get_title_widget_x {
-        use fltk::{enums::Font, frame::Frame, prelude::{WidgetBase, WidgetExt}};
+        use fltk::{
+            enums::Font,
+            frame::Frame,
+            prelude::{WidgetBase, WidgetExt},
+        };
 
         use crate::app::ui::now_playing::NowPlaying;
 
@@ -463,6 +472,39 @@ mod test {
         #[test]
         fn test_long_title() {
             test_title_centering("hello world today is the day");
+        }
+    }
+
+    mod extract_title_from_tag {
+        use lofty::tag::{ItemKey, Tag};
+
+        use crate::app::ui::now_playing::NowPlaying;
+
+        fn test_default_title_is_returned<F>(test: F)
+        where
+            F: Fn() -> Tag,
+        {
+            let title = NowPlaying::extract_title_from_tag(&test());
+            let expected_title = "Untitled audio";
+
+            assert_eq!(title, expected_title);
+        }
+
+        #[test]
+        fn extract_title() {
+            let title = "less than lovers";
+
+            let mut tag = Tag::new(lofty::tag::TagType::Id3v2);
+            tag.insert_text(ItemKey::TrackTitle, "less than lovers".to_string());
+
+            assert_eq!(NowPlaying::extract_title_from_tag(&tag), title);
+        }
+
+        #[test]
+        fn extract_title_from_tag_with_no_title() {
+            test_default_title_is_returned(|| {
+                Tag::new(lofty::tag::TagType::Id3v2)
+            });
         }
     }
 }
