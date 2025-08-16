@@ -2,7 +2,7 @@ use fltk::draw::{self};
 use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
-use fltk::output::Output;
+use fltk::output::{self, Output};
 use fltk::prelude::{InputExt, WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
@@ -19,12 +19,13 @@ impl NowPlaying {
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
-        NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
+        let title_widget = NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
+        NowPlaying::create_artist_widget(&metadata_tag, &cover_widget, &title_widget);
 
         NowPlaying {}
     }
 
-    fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) {
+    fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) -> Output {
         const FONT: Font = Font::HelveticaBold;
 
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
@@ -46,6 +47,46 @@ impl NowPlaying {
         title_widget.set_value(&title);
         title_widget.set_text_font(FONT);
         title_widget.set_frame(FrameType::NoBox);
+
+        title_widget
+    }
+
+    fn create_artist_widget(metadata_tag: &Tag, cover_widget: &Frame, title_widget: &Output) {
+        const FONT: Font = Font::Helvetica;
+
+        let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
+
+        // TODO: Remove getting text width twice
+        draw::set_font(FONT, 14);
+        let (text_width, _) = draw::measure(&artist, false);
+
+        // Center X position
+        let center_x = NowPlaying::get_title_widget_x(cover_widget, &artist);
+        let pos_y = NowPlaying::get_artist_widget_y(title_widget);
+
+        let artist_widget_width = text_width + 10;
+        let artist_widget_height = 20;
+
+        let mut artist_widget = Output::new(
+            center_x,
+            pos_y,
+            artist_widget_width,
+            artist_widget_height,
+            "",
+        );
+
+        artist_widget.set_value(&artist);
+        artist_widget.set_text_font(FONT);
+        artist_widget.set_frame(FrameType::NoBox);
+    }
+
+    fn get_artist_widget_y(title_widget: &Output) -> i32 {
+        let title_y = title_widget.y();
+        let title_h = title_widget.h();
+
+        // Place just below the title
+        const PADDING_Y: i32 = 0;
+        title_y + title_h + PADDING_Y
     }
 
     /// Extract the title from a given metadata tag.
@@ -100,7 +141,7 @@ impl NowPlaying {
     }
 
     fn create_cover_widget(metadata_tag: &Tag) -> Frame {
-        let mut cover_widget = Frame::new(150, 50, 100, 100, "");
+        let mut cover_widget = Frame::new(150, 40, 100, 100, "");
 
         // Extract the image from the metadata tag
         let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
