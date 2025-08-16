@@ -2,7 +2,7 @@ use fltk::draw::{self};
 use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
-use fltk::output::{self, Output};
+use fltk::output::Output;
 use fltk::prelude::{InputExt, WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
@@ -144,7 +144,7 @@ impl NowPlaying {
         let mut cover_widget = Frame::new(150, 40, 100, 100, "");
 
         // Extract the image from the metadata tag
-        let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
+        let cover_image = NowPlaying::extract_cover_image_from_tag(metadata_tag);
 
         // Assign the image to the frame
         // Use set_image_scaled so that the image scales to the widget's size
