@@ -1,8 +1,11 @@
 use std::path::Path;
 
+use fltk::draw::{self, height};
+use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
 use fltk::image::{JpegImage, PngImage, SharedImage};
-use fltk::prelude::{WidgetBase, WidgetExt};
+use fltk::output::Output;
+use fltk::prelude::{InputExt, WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::{MimeType, PictureType};
@@ -15,20 +18,65 @@ impl NowPlaying {
     pub fn new(path: &str) -> NowPlaying {
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
-        NowPlaying::create_cover_widget(metadata_tag);
+        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
+        NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
 
         NowPlaying {}
     }
 
-    fn create_cover_widget(metadata_tag: Tag) {
-        let mut cover_image_widget = Frame::new(150, 50, 100, 100, "");
+    fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) {
+        let title = metadata_tag.title().unwrap();
+
+        draw::set_font(Font::Helvetica, 14); // make sure the font/size matches your widget
+        let (text_width, _) = draw::measure(&title, false);
+
+        // Center X position
+        let center_x = NowPlaying::get_title_widget_x(cover_widget, &title);
+        let pos_y = NowPlaying::get_title_widget_y(cover_widget);
+
+        let title_widget_width = text_width + 10;
+        let title_widget_height = 20;
+
+        let mut title_widget =
+            Output::new(center_x, pos_y, title_widget_width, title_widget_height, "");
+
+        title_widget.set_value(&title);
+        title_widget.set_text_font(Font::Helvetica);
+        title_widget.set_frame(FrameType::NoBox);
+    }
+
+    fn get_title_widget_x(cover_widget: &Frame, title: &str) -> i32 {
+        draw::set_font(Font::Helvetica, 14); // make sure the font/size matches your widget
+        let (text_width, _) = draw::measure(title, false);
+
+        // Get cover widget position and width
+        let cover_x = cover_widget.x();
+        let cover_w = cover_widget.w();
+
+        // Return centered x position
+        cover_x + (cover_w - text_width) / 2
+    }
+
+    fn get_title_widget_y(cover_widget: &Frame) -> i32 {
+        let cover_y = cover_widget.y();
+        let cover_h = cover_widget.h();
+
+        // Place just below the cover
+        const PADDING_Y: i32 = 0;
+        cover_y + cover_h + PADDING_Y
+    }
+
+    fn create_cover_widget(metadata_tag: &Tag) -> Frame {
+        let mut cover_widget = Frame::new(150, 50, 100, 100, "");
 
         // Extract the image from the metadata tag
         let cover_image = NowPlaying::extract_cover_image_from_tag(&metadata_tag);
 
         // Assign the image to the frame
         // Use set_image_scaled so that the image scales to the widget's size
-        cover_image_widget.set_image_scaled(Some(cover_image));
+        cover_widget.set_image_scaled(Some(cover_image));
+
+        cover_widget
     }
 
     /// Parse an audio file's metadata, and return the primary tag. If the primary tag is not found, it will return the first tag.
@@ -372,6 +420,49 @@ mod test {
             assert_eq!(expected_img.width(), img.width());
             assert_eq!(expected_img.height(), img.height());
             assert_eq!(expected_img.to_rgb_data(), img.to_rgb_data());
+        }
+    }
+
+    mod get_title_widget_x {
+        use fltk::{enums::Font, frame::Frame, prelude::{WidgetBase, WidgetExt}};
+
+        use crate::app::ui::now_playing::NowPlaying;
+
+        fn test_title_centering(title: &str) {
+            let cover_widget = Frame::new(150, 50, 100, 100, "");
+
+            let text_width = {
+                fltk::draw::set_font(Font::Helvetica, 14);
+                let (w, _) = fltk::draw::measure(title, false);
+                w
+            };
+
+            let cover_x = cover_widget.x();
+            let cover_w = cover_widget.w();
+
+            let title_x = NowPlaying::get_title_widget_x(&cover_widget, title);
+
+            // Compute left & right margins
+            let left_margin = title_x - cover_x;
+            let right_margin = (cover_x + cover_w) - (title_x + text_width);
+
+            // They should be almost equal
+            assert!((left_margin - right_margin).abs() <= 1);
+        }
+
+        #[test]
+        fn test_short_title() {
+            test_title_centering("hello");
+        }
+
+        #[test]
+        fn test_medium_title() {
+            test_title_centering("hello world");
+        }
+
+        #[test]
+        fn test_long_title() {
+            test_title_centering("hello world today is the day");
         }
     }
 }
