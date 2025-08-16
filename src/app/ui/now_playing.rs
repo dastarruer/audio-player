@@ -13,7 +13,7 @@ pub struct NowPlaying {}
 
 impl NowPlaying {
     pub fn new(path: &str) -> NowPlaying {
-        let mut cover_image_widget = Frame::new(0, 0, 100, 100, "");
+        let mut cover_image_widget = Frame::new(150, 50, 100, 100, "");
 
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
