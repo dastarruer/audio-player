@@ -178,12 +178,10 @@ impl NowPlaying {
     /// - The mime type does not exist
     /// - The mime type is not `MimeType::Png` or `MimeType::Jpeg`
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
-        // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
-        let default_cover_path = Path::new("assets/default.png");
 
         // If there are no pictures, return the default cover
         if tag.picture_count() == 0 {
-            return SharedImage::load(default_cover_path).unwrap();
+            return NowPlaying::get_default_cover();
         }
 
         let cover = tag
@@ -195,7 +193,7 @@ impl NowPlaying {
         let cover = if let Some(cover) = cover {
             cover
         } else {
-            return SharedImage::load(default_cover_path).unwrap();
+            return NowPlaying::get_default_cover();
         };
 
         let cover_bytes = cover.data();
@@ -212,8 +210,15 @@ impl NowPlaying {
             MimeType::Jpeg => {
                 SharedImage::from_image(&JpegImage::from_data(cover_bytes).unwrap()).unwrap()
             }
-            _ => SharedImage::load(default_cover_path).unwrap(),
+            _ => NowPlaying::get_default_cover(),
         }
+    }
+
+    fn get_default_cover() -> SharedImage {
+        // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
+        let default_cover_path = Path::new("assets/default.png");
+
+        SharedImage::load(default_cover_path).unwrap()
     }
 
     /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
