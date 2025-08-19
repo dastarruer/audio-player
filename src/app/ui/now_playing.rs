@@ -15,6 +15,8 @@ use std::path::Path;
 pub struct NowPlaying {}
 
 impl NowPlaying {
+    const FONTSIZE: i32 = 14;
+
     pub fn new(path: &str) -> NowPlaying {
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
@@ -25,11 +27,9 @@ impl NowPlaying {
 
     fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) -> Output {
         const FONT: Font = Font::HelveticaBold;
-        const FONTSIZE: i32 = 14;
-
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
-        let text_width = get_text_width(&title, FONT, FONTSIZE);
+        let text_width = get_text_width(&title, FONT, Self::FONTSIZE);
 
         // Center X position
         let center_x = NowPlaying::text_center_x_of_widget(cover_widget, text_width);
@@ -50,11 +50,10 @@ impl NowPlaying {
 
     fn create_artist_widget(metadata_tag: &Tag, cover_widget: &Frame, title_widget: &Output) {
         const FONT: Font = Font::Helvetica;
-        const FONTSIZE: i32 = 14;
 
         let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
 
-        let text_width = get_text_width(&artist, FONT, FONTSIZE);
+        let text_width = get_text_width(&artist, FONT, Self::FONTSIZE);
 
         let artist_widget_x = NowPlaying::text_center_x_of_widget(cover_widget, text_width);
         let artist_widget_y = NowPlaying::get_artist_widget_y(title_widget);
