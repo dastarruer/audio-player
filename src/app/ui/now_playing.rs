@@ -113,7 +113,7 @@ impl NowPlaying {
             .to_string()
     }
 
-    /// Return the x position of a text box that would be needed to center it over another widget.
+    /// Return the x position of a text box that would be needed to center it under another widget.
     fn text_center_x_of_widget(widget: &Frame, text_width: i32) -> i32 {
         // Get cover widget position and width
         let cover_x = widget.x();
