@@ -27,26 +27,12 @@ impl NowPlaying {
 
     fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) -> Output {
         const FONT: Font = Font::HelveticaBold;
+
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
-        let text_width = get_text_width(&title, FONT, Self::FONTSIZE);
+        let title_widget_y = NowPlaying::get_title_widget_y(cover_widget);
 
-        // Center X position
-        let center_x = NowPlaying::text_center_x_of_widget(cover_widget, text_width);
-        let pos_y = NowPlaying::get_title_widget_y(cover_widget);
-
-        let title_widget_width = text_width + 10;
-        let title_widget_height = 20;
-
-        let mut title_widget =
-            Output::new(center_x, pos_y, title_widget_width, title_widget_height, "");
-
-        title_widget.set_value(&title);
-        title_widget.set_text_font(FONT);
-
-        NowPlaying::style_text_widget(&mut title_widget);
-
-        title_widget
+        NowPlaying::create_text_widget(&title, FONT, cover_widget, title_widget_y)
     }
 
     fn create_artist_widget(metadata_tag: &Tag, cover_widget: &Frame, title_widget: &Output) {
@@ -54,31 +40,33 @@ impl NowPlaying {
 
         let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
 
-        let text_width = get_text_width(&artist, FONT, Self::FONTSIZE);
-
-        let artist_widget_x = NowPlaying::text_center_x_of_widget(cover_widget, text_width);
         let artist_widget_y = NowPlaying::get_artist_widget_y(title_widget);
 
-        let artist_widget_width = text_width + 10;
-        let artist_widget_height = 20;
-
-        let mut artist_widget = Output::new(
-            artist_widget_x,
-            artist_widget_y,
-            artist_widget_width,
-            artist_widget_height,
-            "",
-        );
-
-        artist_widget.set_value(&artist);
-        artist_widget.set_text_font(FONT);
-
-        NowPlaying::style_text_widget(&mut artist_widget);
+        // Create the artist widget
+        NowPlaying::create_text_widget(&artist, FONT, cover_widget, artist_widget_y);
     }
 
     /// Add a unified style to a text widget. Will apply the same style to all text widgets that are passed to it, so it can be reused.
     fn style_text_widget(text_widget: &mut Output) {
         text_widget.set_frame(FrameType::NoBox);
+    }
+
+    fn create_text_widget(text: &str, font: Font, parent: &Frame, widget_y: i32) -> Output {
+        // Add 10 because otherwise the user can scroll horizontally on the text
+        let text_width = get_text_width(text, font, Self::FONTSIZE) + 10;
+        let text_height = Self::FONTSIZE;
+
+        let widget_x = NowPlaying::text_center_x_of_widget(parent, text_width);
+
+        let mut widget = Output::new(widget_x, widget_y, text_width, text_height, "");
+
+        // Set the text of the widget
+        widget.set_value(text);
+        widget.set_text_font(font);
+
+        NowPlaying::style_text_widget(&mut widget);
+
+        widget
     }
 
     fn get_artist_widget_y(title_widget: &Output) -> i32 {
