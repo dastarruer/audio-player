@@ -43,7 +43,8 @@ impl NowPlaying {
 
         title_widget.set_value(&title);
         title_widget.set_text_font(FONT);
-        title_widget.set_frame(FrameType::NoBox);
+
+        NowPlaying::style_text_widget(&mut title_widget);
 
         title_widget
     }
@@ -71,7 +72,13 @@ impl NowPlaying {
 
         artist_widget.set_value(&artist);
         artist_widget.set_text_font(FONT);
-        artist_widget.set_frame(FrameType::NoBox);
+
+        NowPlaying::style_text_widget(&mut artist_widget);
+    }
+
+    /// Add a unified style to a text widget. Will apply the same style to all text widgets that are passed to it, so it can be reused.
+    fn style_text_widget(text_widget: &mut Output) {
+        text_widget.set_frame(FrameType::NoBox);
     }
 
     fn get_artist_widget_y(title_widget: &Output) -> i32 {
@@ -178,7 +185,6 @@ impl NowPlaying {
     /// - The mime type does not exist
     /// - The mime type is not `MimeType::Png` or `MimeType::Jpeg`
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
-
         // If there are no pictures, return the default cover
         if tag.picture_count() == 0 {
             return NowPlaying::get_default_cover();
