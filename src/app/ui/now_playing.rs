@@ -18,9 +18,7 @@ impl NowPlaying {
     pub fn new(path: &str) -> NowPlaying {
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
-        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
-        let title_widget = NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
-        NowPlaying::create_artist_widget(&metadata_tag, &cover_widget, &title_widget);
+        NowPlaying::create_widgets(metadata_tag);
 
         NowPlaying {}
     }
@@ -218,6 +216,13 @@ impl NowPlaying {
             }
             _ => SharedImage::load(default_cover_path).unwrap(),
         }
+    }
+
+    /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
+    fn create_widgets(metadata_tag: Tag) {
+        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
+        let title_widget = NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
+        NowPlaying::create_artist_widget(&metadata_tag, &cover_widget, &title_widget);
     }
 }
 
