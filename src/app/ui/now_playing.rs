@@ -115,7 +115,7 @@ impl NowPlaying {
 
     /// Return the x position of a text box that would be needed to center it under another widget.
     fn text_center_x_of_widget(widget: &Frame, text_width: i32) -> i32 {
-        // Get cover widget position and width
+        // Get widget position and width
         let cover_x = widget.x();
         let cover_w = widget.w();
 
@@ -127,9 +127,8 @@ impl NowPlaying {
         let cover_y = cover_widget.y();
         let cover_h = cover_widget.h();
 
-        // Place just below the cover
-        const PADDING_Y: i32 = 0;
-        cover_y + cover_h + PADDING_Y
+        // Return the cover's y position, and add its height so that we get the bottom of the cover widget
+        cover_y + cover_h
     }
 
     fn create_cover_widget(metadata_tag: &Tag) -> Frame {
