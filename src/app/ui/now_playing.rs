@@ -31,9 +31,7 @@ impl NowPlaying {
 
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
-        // Get the width of the text
-        draw::set_font(FONT, FONTSIZE);
-        let (text_width, _) = draw::measure(&title, false);
+        let text_width = get_text_width(&title, FONT, FONTSIZE);
 
         // Center X position
         let center_x = NowPlaying::text_center_x_of_widget(cover_widget, text_width);
@@ -58,12 +56,9 @@ impl NowPlaying {
 
         let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
 
-        // Get the width of the text
-        draw::set_font(FONT, FONTSIZE);
-        let (text_width, _) = draw::measure(&artist, false);
+        let text_width = get_text_width(&artist, FONT, FONTSIZE);
 
-        let artist_widget_x =
-            NowPlaying::text_center_x_of_widget(cover_widget, text_width);
+        let artist_widget_x = NowPlaying::text_center_x_of_widget(cover_widget, text_width);
         let artist_widget_y = NowPlaying::get_artist_widget_y(title_widget);
 
         let artist_widget_width = text_width + 10;
@@ -224,6 +219,13 @@ impl NowPlaying {
             _ => SharedImage::load(default_cover_path).unwrap(),
         }
     }
+}
+
+fn get_text_width(text: &str, font: Font, fontsize: i32) -> i32 {
+    draw::set_font(font, fontsize);
+    let (text_width, _) = draw::measure(text, false);
+
+    text_width
 }
 
 #[cfg(test)]
