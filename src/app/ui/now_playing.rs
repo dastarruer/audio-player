@@ -120,11 +120,11 @@ impl NowPlaying {
             .to_string()
     }
 
-    /// Return the x position of a text box that would be needed to center it under another widget.
-    fn text_center_x_of_widget(widget: &Frame, text_width: i32) -> i32 {
+    /// Return the x position of a text box that would be needed to center it under a parent widget.
+    fn text_center_x_of_widget(parent_widget: &Frame, text_width: i32) -> i32 {
         // Get widget position and width
-        let cover_x = widget.x();
-        let cover_w = widget.w();
+        let cover_x = parent_widget.x();
+        let cover_w = parent_widget.w();
 
         // Return centered x position
         cover_x + (cover_w - text_width) / 2
