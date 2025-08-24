@@ -33,9 +33,9 @@ impl PlaybackButtons {
 
         let fast_forward_btn = PlaybackButtons::create_fast_forward_button(sender);
 
-        flex.fixed(&rewind_btn, 50);
+        flex.fixed(&rewind_btn, 55);
         flex.fixed(&play_btn, 100);
-        flex.fixed(&fast_forward_btn, 50);
+        flex.fixed(&fast_forward_btn, 55);
         flex.end();
         PlaybackButtons {}
     }
