@@ -119,7 +119,11 @@ impl NowPlaying {
     }
 
     fn create_cover_widget(metadata_tag: &Tag) -> Frame {
-        let mut cover_widget = Frame::new(150, 40, 100, 100, "");
+        const COVER_X: i32 = 150;
+        const COVER_Y: i32 = 40;
+        const COVER_SIZE: i32 = 100;
+
+        let mut cover_widget = Frame::new(COVER_X, COVER_Y, COVER_SIZE, COVER_SIZE, "");
 
         // Extract the image from the metadata tag
         let cover_image = NowPlaying::extract_cover_image_from_tag(metadata_tag);
