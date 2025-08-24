@@ -6,7 +6,7 @@ use fltk::{
     enums::{Color, Event, Font, FrameType},
     frame::Frame,
     misc::Progress,
-    output,
+    output::Output,
     prelude::{WidgetBase, WidgetExt},
 };
 
@@ -25,7 +25,7 @@ pub struct ProgressBar {
     current_audio_pos: Rc<RefCell<Duration>>,
 
     /// Display the audio's current position to the user
-    current_audio_pos_timestamp: output::Output,
+    current_audio_pos_timestamp: Output,
 
     /// The overlay that is used to draw the knob on top of the progress bar
     knob_overlay: Rc<RefCell<Frame>>,
@@ -219,10 +219,7 @@ impl ProgressBar {
     }
 
     /// Create the timestamps on both sides of the progress bar.
-    fn create_timestamps(
-        progress_bar: &Progress,
-        audio_length: Duration,
-    ) -> (output::Output, output::Output) {
+    fn create_timestamps(progress_bar: &Progress, audio_length: Duration) -> (Output, Output) {
         const TIMESTAMP_WIDTH: i32 = 30;
         const TIMESTAMP_HEIGHT: i32 = 1;
 
@@ -232,7 +229,7 @@ impl ProgressBar {
 
         // Create the timestamp to show the viewer the total duration of the audio
         let foramtted_duration = &ProgressBar::format_duration(audio_length);
-        let mut total_audio_duration_timestamp = output::Output::default()
+        let mut total_audio_duration_timestamp = Output::default()
             .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
             .right_of(progress_bar, TOTAL_AUDIO_DURATION_TIMESTAMP_PADDING)
             .center_y(progress_bar)
@@ -242,7 +239,7 @@ impl ProgressBar {
 
         // Create the timestamp to show the viewer the current audio position
         let default_timestamp = "0:00";
-        let mut current_audio_pos_timestamp = output::Output::default()
+        let mut current_audio_pos_timestamp = Output::default()
             .with_size(TIMESTAMP_WIDTH, TIMESTAMP_HEIGHT)
             .left_of(progress_bar, CURRENT_AUDIO_POS_TIMESTAMP_PADDING)
             .center_y(progress_bar)
