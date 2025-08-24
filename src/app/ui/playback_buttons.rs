@@ -22,16 +22,16 @@ impl PlaybackButtons {
         let fast_forward_btn_x = play_btn_x + BTN_OFFSET;
         let rewind_btn_x = play_btn_x - BTN_OFFSET;
 
-        PlaybackButtons::create_play_button(BTN_SIZE, play_btn_x, BTN_Y, sender.clone());
+        let mut _play_btn = PlaybackButtons::create_play_button(BTN_SIZE, play_btn_x, BTN_Y, sender.clone());
 
-        PlaybackButtons::create_fast_forward_button(
+        let mut _fast_forward_btn = PlaybackButtons::create_fast_forward_button(
             BTN_SIZE,
             fast_forward_btn_x,
             BTN_Y,
             sender.clone(),
         );
 
-        PlaybackButtons::create_rewind_button(BTN_SIZE, rewind_btn_x, BTN_Y, sender);
+        let mut _rewind_btn = PlaybackButtons::create_rewind_button(BTN_SIZE, rewind_btn_x, BTN_Y, sender);
 
         PlaybackButtons {}
     }
@@ -48,8 +48,13 @@ impl PlaybackButtons {
     }
 
     /// Create the play button and theme it.
-    fn create_play_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
-        let mut btn = PlaybackButtons::style_button(
+    fn create_play_button(
+        btn_size: i32,
+        btn_x: i32,
+        btn_y: i32,
+        sender: mpsc::Sender<Message>,
+    ) -> Button {
+        let mut play_btn = PlaybackButtons::style_button(
             Button::default()
                 .with_size(btn_size, btn_size)
                 .with_pos(btn_x, btn_y)
@@ -57,7 +62,7 @@ impl PlaybackButtons {
         );
 
         // Define a function to execute once the button is clicked
-        btn.set_callback(move |btn| {
+        play_btn.set_callback(move |btn| {
             // Play/pause audio
             let current_label = btn.label();
             let (new_label, message) = PlaybackButtons::handle_play_pause_click(&current_label);
@@ -70,6 +75,8 @@ impl PlaybackButtons {
                 eprintln!("Unable to play/pause audio: {:?}", e);
             };
         });
+
+        play_btn
     }
 
     /// Create the fast-forwards button.
@@ -78,7 +85,7 @@ impl PlaybackButtons {
         btn_x: i32,
         btn_y: i32,
         sender: mpsc::Sender<Message>,
-    ) {
+    ) -> Button {
         let mut seek_forwards_btn = PlaybackButtons::style_button(
             Button::default()
                 .with_size(btn_size, btn_size)
@@ -92,10 +99,12 @@ impl PlaybackButtons {
                 eprintln!("Unable to fast-forward: {:?}", e);
             }
         });
+
+        seek_forwards_btn
     }
 
     /// Create the rewind button.
-    fn create_rewind_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
+    fn create_rewind_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) -> Button {
         let mut seek_backwards_btn = PlaybackButtons::style_button(
             Button::default()
                 .with_size(btn_size, btn_size)
@@ -109,6 +118,8 @@ impl PlaybackButtons {
                 eprintln!("Unable to rewind: {:?}", e)
             }
         });
+
+        seek_backwards_btn
     }
 
     /// Return the corresponding label and Message once the play/pause button is clicked.
