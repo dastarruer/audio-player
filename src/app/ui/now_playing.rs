@@ -52,8 +52,10 @@ impl NowPlaying {
     }
 
     fn create_text_widget(text: &str, font: Font, parent: &Frame, widget_y: i32) -> Output {
+        const HORIZONTAL_PADDING: i32 = 10;
+
         // Add 10 because otherwise the user can scroll horizontally on the text
-        let text_width = get_text_width(text, font, Self::FONTSIZE) + 10;
+        let text_width = get_text_width(text, font, Self::FONTSIZE) + HORIZONTAL_PADDING;
         let text_height = Self::FONTSIZE;
 
         let widget_x = NowPlaying::text_center_x_of_widget(parent, text_width);
