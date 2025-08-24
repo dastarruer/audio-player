@@ -30,7 +30,7 @@ impl NowPlaying {
 
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
-        let title_widget_y = NowPlaying::get_title_widget_y(cover_widget);
+        let title_widget_y = NowPlaying::below_widget(cover_widget);
 
         NowPlaying::create_text_widget(&title, FONT, cover_widget, title_widget_y)
     }
@@ -40,7 +40,7 @@ impl NowPlaying {
 
         let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
 
-        let artist_widget_y = NowPlaying::get_artist_widget_y(title_widget);
+        let artist_widget_y = NowPlaying::below_widget(title_widget);
 
         // Create the artist widget
         NowPlaying::create_text_widget(&artist, FONT, cover_widget, artist_widget_y);
@@ -67,15 +67,6 @@ impl NowPlaying {
         NowPlaying::style_text_widget(&mut widget);
 
         widget
-    }
-
-    fn get_artist_widget_y(title_widget: &Output) -> i32 {
-        let title_y = title_widget.y();
-        let title_h = title_widget.h();
-
-        // Place just below the title
-        const PADDING_Y: i32 = 0;
-        title_y + title_h + PADDING_Y
     }
 
     /// Extract the title from a given metadata tag.
@@ -118,12 +109,13 @@ impl NowPlaying {
         cover_x + (cover_w - text_width) / 2
     }
 
-    fn get_title_widget_y(cover_widget: &Frame) -> i32 {
-        let cover_y = cover_widget.y();
-        let cover_h = cover_widget.h();
+    /// Return the y-value of the bottom of a widget. Used when placing a widget right below a different one.
+    fn below_widget(widget: &impl WidgetExt) -> i32 {
+        let widget_y = widget.y();
+        let widget_h = widget.h();
 
-        // Return the cover's y position, and add its height so that we get the bottom of the cover widget
-        cover_y + cover_h
+        // Return the widget's y position, and add its height so that we get the bottom of the widget
+        widget_y + widget_h
     }
 
     fn create_cover_widget(metadata_tag: &Tag) -> Frame {
