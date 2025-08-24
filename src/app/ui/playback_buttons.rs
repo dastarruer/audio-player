@@ -24,15 +24,15 @@ impl PlaybackButtons {
         let mut flex = group::Flex::new(rewind_btn_x, BTN_Y, 200, 10, "");
         flex.set_type(group::FlexType::Row);
 
+        let rewind_btn = PlaybackButtons::create_rewind_button(sender.clone());
+
         let play_btn = PlaybackButtons::create_play_button(sender.clone());
 
-        let fast_forward_btn = PlaybackButtons::create_fast_forward_button(sender.clone());
+        let fast_forward_btn = PlaybackButtons::create_fast_forward_button(sender);
 
-        let rewind_btn = PlaybackButtons::create_rewind_button(sender);
-
-        flex.fixed(&fast_forward_btn, BTN_SIZE); 
-        flex.fixed(&play_btn, BTN_SIZE);
         flex.fixed(&rewind_btn, BTN_SIZE);
+        flex.fixed(&play_btn, BTN_SIZE);
+        flex.fixed(&fast_forward_btn, BTN_SIZE);
         flex.end();
         PlaybackButtons {}
     }
