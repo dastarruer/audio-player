@@ -1,6 +1,6 @@
 use std::{sync::mpsc, time::Duration};
 
-use fltk::{button::Button, prelude::*};
+use fltk::{button::Button, group, prelude::*};
 
 use crate::app::Message;
 
@@ -14,25 +14,26 @@ impl PlaybackButtons {
 
     /// Create new playback buttons
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
-        const BTN_SIZE: i32 = 30;
+        const BTN_SIZE: i32 = 20;
         const BTN_Y: i32 = 200; // Since every button will be at the same y-coordinate, each button shares the same constant
         const BTN_OFFSET: i32 = 100;
 
         let play_btn_x = (win_width - BTN_SIZE) / 2; // Center the button horizontally
-        let fast_forward_btn_x = play_btn_x + BTN_OFFSET;
         let rewind_btn_x = play_btn_x - BTN_OFFSET;
 
-        let mut _play_btn = PlaybackButtons::create_play_button(BTN_SIZE, play_btn_x, BTN_Y, sender.clone());
+        let mut flex = group::Flex::new(rewind_btn_x, BTN_Y, 200, 10, "");
+        flex.set_type(group::FlexType::Row);
 
-        let mut _fast_forward_btn = PlaybackButtons::create_fast_forward_button(
-            BTN_SIZE,
-            fast_forward_btn_x,
-            BTN_Y,
-            sender.clone(),
-        );
+        let play_btn = PlaybackButtons::create_play_button(sender.clone());
 
-        let mut _rewind_btn = PlaybackButtons::create_rewind_button(BTN_SIZE, rewind_btn_x, BTN_Y, sender);
+        let fast_forward_btn = PlaybackButtons::create_fast_forward_button(sender.clone());
 
+        let rewind_btn = PlaybackButtons::create_rewind_button(sender);
+
+        flex.fixed(&fast_forward_btn, BTN_SIZE); 
+        flex.fixed(&play_btn, BTN_SIZE);
+        flex.fixed(&rewind_btn, BTN_SIZE);
+        flex.end();
         PlaybackButtons {}
     }
 
@@ -48,18 +49,9 @@ impl PlaybackButtons {
     }
 
     /// Create the play button and theme it.
-    fn create_play_button(
-        btn_size: i32,
-        btn_x: i32,
-        btn_y: i32,
-        sender: mpsc::Sender<Message>,
-    ) -> Button {
-        let mut play_btn = PlaybackButtons::style_button(
-            Button::default()
-                .with_size(btn_size, btn_size)
-                .with_pos(btn_x, btn_y)
-                .with_label(Self::PAUSE_BUTTON),
-        );
+    fn create_play_button(sender: mpsc::Sender<Message>) -> Button {
+        let mut play_btn =
+            PlaybackButtons::style_button(Button::default().with_label(Self::PAUSE_BUTTON));
 
         // Define a function to execute once the button is clicked
         play_btn.set_callback(move |btn| {
@@ -80,18 +72,9 @@ impl PlaybackButtons {
     }
 
     /// Create the fast-forwards button.
-    fn create_fast_forward_button(
-        btn_size: i32,
-        btn_x: i32,
-        btn_y: i32,
-        sender: mpsc::Sender<Message>,
-    ) -> Button {
-        let mut seek_forwards_btn = PlaybackButtons::style_button(
-            Button::default()
-                .with_size(btn_size, btn_size)
-                .with_pos(btn_x, btn_y)
-                .with_label("󰵱"),
-        );
+    fn create_fast_forward_button(sender: mpsc::Sender<Message>) -> Button {
+        let mut seek_forwards_btn =
+            PlaybackButtons::style_button(Button::default().with_label("󰵱"));
 
         seek_forwards_btn.set_callback(move |_| {
             // Send a fast-forward message to the audio thread
@@ -104,13 +87,9 @@ impl PlaybackButtons {
     }
 
     /// Create the rewind button.
-    fn create_rewind_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) -> Button {
-        let mut seek_backwards_btn = PlaybackButtons::style_button(
-            Button::default()
-                .with_size(btn_size, btn_size)
-                .with_pos(btn_x, btn_y)
-                .with_label("󰴪"),
-        );
+    fn create_rewind_button(sender: mpsc::Sender<Message>) -> Button {
+        let mut seek_backwards_btn =
+            PlaybackButtons::style_button(Button::default().with_label("󰴪"));
 
         seek_backwards_btn.set_callback(move |_| {
             // Send a rewind message to the audio thread
