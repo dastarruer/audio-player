@@ -55,7 +55,7 @@ impl NowPlaying {
         const HORIZONTAL_PADDING: i32 = 10;
 
         // Add 10 because otherwise the user can scroll horizontally on the text
-        let text_width = get_text_width(text, font, Self::FONTSIZE) + HORIZONTAL_PADDING;
+        let text_width = text_width(text, font, Self::FONTSIZE) + HORIZONTAL_PADDING;
         let text_height = Self::FONTSIZE;
 
         let widget_x = NowPlaying::text_center_x_of_widget(parent, text_width);
@@ -173,7 +173,7 @@ impl NowPlaying {
     fn extract_cover_image_from_tag(tag: &Tag) -> SharedImage {
         // If there are no pictures, return the default cover
         if tag.picture_count() == 0 {
-            return NowPlaying::get_default_cover();
+            return NowPlaying::default_cover();
         }
 
         let cover = tag
@@ -185,7 +185,7 @@ impl NowPlaying {
         let cover = if let Some(cover) = cover {
             cover
         } else {
-            return NowPlaying::get_default_cover();
+            return NowPlaying::default_cover();
         };
 
         let cover_bytes = cover.data();
@@ -202,11 +202,11 @@ impl NowPlaying {
             MimeType::Jpeg => {
                 SharedImage::from_image(&JpegImage::from_data(cover_bytes).unwrap()).unwrap()
             }
-            _ => NowPlaying::get_default_cover(),
+            _ => NowPlaying::default_cover(),
         }
     }
 
-    fn get_default_cover() -> SharedImage {
+    fn default_cover() -> SharedImage {
         // The path to the default cover, which will be displayed in case anything goes wrong while fetching the cover image
         let default_cover_path = Path::new("assets/default.png");
 
@@ -221,7 +221,7 @@ impl NowPlaying {
     }
 }
 
-fn get_text_width(text: &str, font: Font, fontsize: i32) -> i32 {
+fn text_width(text: &str, font: Font, fontsize: i32) -> i32 {
     draw::set_font(font, fontsize);
     let (text_width, _) = draw::measure(text, false);
 
@@ -327,7 +327,7 @@ mod test {
             Picture::new_unchecked(pic_type, Some(mime_type), None, data)
         }
 
-        fn get_test_cover_path(filename: &str) -> PathBuf {
+        fn test_cover_path(filename: &str) -> PathBuf {
             let relative_cover_path = format!("{}/images/covers/{}", TEST_FILES, filename);
 
             // Return the full file path
@@ -340,7 +340,7 @@ mod test {
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
 
-            let full_cover_path = get_test_cover_path(filename);
+            let full_cover_path = test_cover_path(filename);
 
             let front_cover = create_picture(full_cover_path.clone(), mime_type, pic_type);
             tag.push_picture(front_cover);
@@ -415,7 +415,7 @@ mod test {
         #[test]
         fn test_no_cover_image() {
             assert_default_cover_is_returned(|| {
-                let full_cover_path = get_test_cover_path("test_cover.jpg");
+                let full_cover_path = test_cover_path("test_cover.jpg");
 
                 let mut tag = Tag::new(TagType::Id3v2);
 
@@ -434,7 +434,7 @@ mod test {
 
         #[test]
         fn test_multiple_cover_images() {
-            let full_expected_cover_path = get_test_cover_path("test_cover.jpg");
+            let full_expected_cover_path = test_cover_path("test_cover.jpg");
 
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
@@ -447,7 +447,7 @@ mod test {
             );
             tag.push_picture(expected_front_cover);
 
-            let full_cover_path = get_test_cover_path("test_cover.png");
+            let full_cover_path = test_cover_path("test_cover.png");
 
             // Create second front cover. This should not be returned
             let front_cover = create_picture(
@@ -467,7 +467,7 @@ mod test {
 
         #[test]
         fn test_multiple_cover_image_types() {
-            let full_artist_picture_path = get_test_cover_path("test_cover.jpg");
+            let full_artist_picture_path = test_cover_path("test_cover.jpg");
 
             // The tag type shouldn't matter
             let mut tag = Tag::new(TagType::Id3v2);
@@ -480,7 +480,7 @@ mod test {
             );
             tag.push_picture(artist_picture);
 
-            let full_cover_path = get_test_cover_path("test_cover.png");
+            let full_cover_path = test_cover_path("test_cover.png");
 
             // Create front cover. This should be returned
             let front_cover = create_picture(
