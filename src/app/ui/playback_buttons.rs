@@ -1,6 +1,6 @@
 use std::{sync::mpsc, time::Duration};
 
-use fltk::{button, prelude::*};
+use fltk::{button::Button, prelude::*};
 
 use crate::app::Message;
 
@@ -37,7 +37,7 @@ impl PlaybackButtons {
     }
 
     /// Style each playback button with a unified style
-    fn style_button(mut btn: button::Button) -> button::Button {
+    fn style_button(mut btn: Button) -> Button {
         // Remove focus border around button
         btn.clear_visible_focus();
 
@@ -50,7 +50,7 @@ impl PlaybackButtons {
     /// Create the play button and theme it.
     fn create_play_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
         let mut btn = PlaybackButtons::style_button(
-            button::Button::default()
+            Button::default()
                 .with_size(btn_size, btn_size)
                 .with_pos(btn_x, btn_y)
                 .with_label(Self::PAUSE_BUTTON),
@@ -80,7 +80,7 @@ impl PlaybackButtons {
         sender: mpsc::Sender<Message>,
     ) {
         let mut seek_forwards_btn = PlaybackButtons::style_button(
-            button::Button::default()
+            Button::default()
                 .with_size(btn_size, btn_size)
                 .with_pos(btn_x, btn_y)
                 .with_label("󰵱"),
@@ -97,7 +97,7 @@ impl PlaybackButtons {
     /// Create the rewind button.
     fn create_rewind_button(btn_size: i32, btn_x: i32, btn_y: i32, sender: mpsc::Sender<Message>) {
         let mut seek_backwards_btn = PlaybackButtons::style_button(
-            button::Button::default()
+            Button::default()
                 .with_size(btn_size, btn_size)
                 .with_pos(btn_x, btn_y)
                 .with_label("󰴪"),
