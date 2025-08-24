@@ -14,15 +14,18 @@ impl PlaybackButtons {
 
     /// Create new playback buttons
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
-        const BTN_SIZE: i32 = 20;
-        const BTN_Y: i32 = 200; // Since every button will be at the same y-coordinate, each button shares the same constant
+        const FLEX_WIDTH: i32 = 250;
+        const FLEX_Y: i32 = 210;
+
         const BTN_OFFSET: i32 = 100;
 
-        let play_btn_x = (win_width - BTN_SIZE) / 2; // Center the button horizontally
-        let rewind_btn_x = play_btn_x - BTN_OFFSET;
+        let play_btn_x = (win_width - 20) / 2; // Center the button horizontally
+        let flex_x = play_btn_x - BTN_OFFSET;
 
-        let mut flex = group::Flex::new(rewind_btn_x, BTN_Y, 200, 10, "");
-        flex.set_type(group::FlexType::Row);
+        let mut flex = group::Flex::default()
+            .with_pos(flex_x, FLEX_Y)
+            .with_size(FLEX_WIDTH, 10)
+            .row();
 
         let rewind_btn = PlaybackButtons::create_rewind_button(sender.clone());
 
@@ -30,9 +33,9 @@ impl PlaybackButtons {
 
         let fast_forward_btn = PlaybackButtons::create_fast_forward_button(sender);
 
-        flex.fixed(&rewind_btn, BTN_SIZE);
-        flex.fixed(&play_btn, BTN_SIZE);
-        flex.fixed(&fast_forward_btn, BTN_SIZE);
+        flex.fixed(&rewind_btn, 50);
+        flex.fixed(&play_btn, 100);
+        flex.fixed(&fast_forward_btn, 50);
         flex.end();
         PlaybackButtons {}
     }
