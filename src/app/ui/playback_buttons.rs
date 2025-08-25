@@ -16,11 +16,13 @@ impl PlaybackButtons {
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
         const FLEX_WIDTH: i32 = 250;
         const FLEX_Y: i32 = 210;
+        const FLEX_X_OFFSET: i32 = 20;
 
         const BTN_OFFSET: i32 = 100;
 
-        let play_btn_x = (win_width - 20) / 2; // Center the button horizontally
-        let flex_x = play_btn_x - BTN_OFFSET;
+        // Get center of window
+        let center_x = (win_width - FLEX_X_OFFSET) / 2;
+        let flex_x = center_x - BTN_OFFSET;
 
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
