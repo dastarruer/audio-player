@@ -1,9 +1,10 @@
 use fltk::draw::{self};
 use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
+use fltk::group;
 use fltk::image::{JpegImage, PngImage, SharedImage};
 use fltk::output::Output;
-use fltk::prelude::{InputExt, WidgetBase, WidgetExt};
+use fltk::prelude::{GroupExt, InputExt, WidgetBase, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::{MimeType, PictureType};
@@ -60,7 +61,8 @@ impl NowPlaying {
 
         let widget_x = NowPlaying::text_center_x_of_widget(parent, text_width);
 
-        let mut widget = Output::new(widget_x, widget_y, text_width, text_height, "");
+        // let mut widget = Output::new(widget_x, widget_y, text_width, text_height, "");
+        let mut widget = Output::default().with_size(text_width, text_height);
 
         // Set the text of the widget
         widget.set_value(text);
@@ -125,7 +127,7 @@ impl NowPlaying {
         const COVER_Y: i32 = 40;
         const COVER_SIZE: i32 = 100;
 
-        let mut cover_widget = Frame::new(COVER_X, COVER_Y, COVER_SIZE, COVER_SIZE, "");
+        let mut cover_widget = Frame::default().with_size(COVER_SIZE, COVER_SIZE);
 
         // Extract the image from the metadata tag
         let cover_image = NowPlaying::extract_cover_image_from_tag(metadata_tag);
@@ -215,9 +217,27 @@ impl NowPlaying {
 
     /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
     fn create_widgets(metadata_tag: Tag) {
+        const FLEX_WIDTH: i32 = 250;
+        const FLEX_Y: i32 = 100;
+        const FLEX_X_MARGIN: i32 = 100;
+
+        const BUTTON_SPACING: i32 = 100;
+
+        let window_center_x = (400 - FLEX_X_MARGIN) / 2;
+        let flex_x = window_center_x - BUTTON_SPACING;
+
+        let mut flex = group::Flex::default()
+            .with_pos(flex_x, FLEX_Y)
+            .with_size(FLEX_WIDTH, 10)
+            .column();
+
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
         let title_widget = NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
         NowPlaying::create_artist_widget(&metadata_tag, &cover_widget, &title_widget);
+
+        // flex.fixed(&cover_widget, 100);
+        flex.fixed(&title_widget, 30);
+        flex.end();
     }
 }
 
