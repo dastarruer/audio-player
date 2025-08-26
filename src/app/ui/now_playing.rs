@@ -1,10 +1,9 @@
-use fltk::draw::{self};
 use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
 use fltk::group;
 use fltk::image::{JpegImage, PngImage, SharedImage};
 use fltk::output::Output;
-use fltk::prelude::{GroupExt, InputExt, WidgetBase, WidgetExt};
+use fltk::prelude::{GroupExt, InputExt, WidgetExt};
 use lofty::error::{ErrorKind, LoftyError};
 use lofty::file::TaggedFileExt;
 use lofty::picture::{MimeType, PictureType};
@@ -16,8 +15,6 @@ use std::path::Path;
 pub struct NowPlaying {}
 
 impl NowPlaying {
-    const FONTSIZE: i32 = 14;
-
     pub fn new(path: &str) -> NowPlaying {
         let metadata_tag = NowPlaying::parse_file(path).unwrap();
 
@@ -26,25 +23,21 @@ impl NowPlaying {
         NowPlaying {}
     }
 
-    fn create_title_widget(metadata_tag: &Tag, cover_widget: &Frame) -> Output {
+    fn create_title_widget(metadata_tag: &Tag) -> Output {
         const FONT: Font = Font::HelveticaBold;
 
         let title = NowPlaying::extract_title_from_tag(metadata_tag);
 
-        let title_widget_y = NowPlaying::below_widget(cover_widget);
-
-        NowPlaying::create_text_widget(&title, FONT, cover_widget, title_widget_y)
+        NowPlaying::create_text_widget(&title, FONT)
     }
 
-    fn create_artist_widget(metadata_tag: &Tag, cover_widget: &Frame, title_widget: &Output) {
+    fn create_artist_widget(metadata_tag: &Tag) -> Output {
         const FONT: Font = Font::Helvetica;
 
         let artist = NowPlaying::extract_artist_from_tag(metadata_tag);
 
-        let artist_widget_y = NowPlaying::below_widget(title_widget);
-
-        // Create the artist widget
-        NowPlaying::create_text_widget(&artist, FONT, cover_widget, artist_widget_y);
+        // Create the artist widget and return it
+        NowPlaying::create_text_widget(&artist, FONT)
     }
 
     /// Add a unified style to a text widget. Will apply the same style to all text widgets that are passed to it, so it can be reused.
@@ -52,17 +45,8 @@ impl NowPlaying {
         text_widget.set_frame(FrameType::NoBox);
     }
 
-    fn create_text_widget(text: &str, font: Font, parent: &Frame, widget_y: i32) -> Output {
-        const HORIZONTAL_PADDING: i32 = 10;
-
-        // Add 10 because otherwise the user can scroll horizontally on the text
-        let text_width = text_width(text, font, Self::FONTSIZE) + HORIZONTAL_PADDING;
-        let text_height = Self::FONTSIZE;
-
-        let widget_x = NowPlaying::text_center_x_of_widget(parent, text_width);
-
-        // let mut widget = Output::new(widget_x, widget_y, text_width, text_height, "");
-        let mut widget = Output::default().with_size(text_width, text_height);
+    fn create_text_widget(text: &str, font: Font) -> Output {
+        let mut widget = Output::default();
 
         // Set the text of the widget
         widget.set_value(text);
@@ -103,28 +87,7 @@ impl NowPlaying {
             .to_string()
     }
 
-    /// Return the x position of a text box that would be needed to center it under a parent widget.
-    fn text_center_x_of_widget(parent_widget: &Frame, text_width: i32) -> i32 {
-        // Get widget position and width
-        let cover_x = parent_widget.x();
-        let cover_w = parent_widget.w();
-
-        // Return centered x position
-        cover_x + (cover_w - text_width) / 2
-    }
-
-    /// Return the y-value of the bottom of a widget. Used when placing a widget right below a different one.
-    fn below_widget(widget: &impl WidgetExt) -> i32 {
-        let widget_y = widget.y();
-        let widget_h = widget.h();
-
-        // Return the widget's y position, and add its height so that we get the bottom of the widget
-        widget_y + widget_h
-    }
-
     fn create_cover_widget(metadata_tag: &Tag) -> Frame {
-        const COVER_X: i32 = 150;
-        const COVER_Y: i32 = 40;
         const COVER_SIZE: i32 = 100;
 
         let mut cover_widget = Frame::default().with_size(COVER_SIZE, COVER_SIZE);
@@ -232,20 +195,17 @@ impl NowPlaying {
             .column();
 
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
-        let title_widget = NowPlaying::create_title_widget(&metadata_tag, &cover_widget);
-        NowPlaying::create_artist_widget(&metadata_tag, &cover_widget, &title_widget);
+        let title_widget = NowPlaying::create_title_widget(&metadata_tag);
+        let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
 
-        // flex.fixed(&cover_widget, 100);
-        flex.fixed(&title_widget, 30);
+        flex.set_margin(10);
+
+        flex.fixed(&cover_widget, 40);
+        flex.fixed(&title_widget, 20);
+        flex.fixed(&artist_widget, 20);
+
         flex.end();
     }
-}
-
-fn text_width(text: &str, font: Font, fontsize: i32) -> i32 {
-    draw::set_font(font, fontsize);
-    let (text_width, _) = draw::measure(text, false);
-
-    text_width
 }
 
 #[cfg(test)]
