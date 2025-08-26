@@ -102,6 +102,35 @@ impl NowPlaying {
         cover_widget
     }
 
+    /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
+    fn create_widgets(metadata_tag: Tag) {
+        const FLEX_WIDTH: i32 = 250;
+        const FLEX_Y: i32 = 25;
+        const FLEX_X_MARGIN: i32 = 0;
+
+        const BUTTON_SPACING: i32 = 100;
+
+        let window_center_x = (400 - FLEX_X_MARGIN) / 2;
+        let flex_x = window_center_x - BUTTON_SPACING;
+
+        let mut flex = group::Flex::default()
+            .with_pos(flex_x, FLEX_Y)
+            .with_size(FLEX_WIDTH, 300)
+            .column();
+
+        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
+        let title_widget = NowPlaying::create_title_widget(&metadata_tag);
+        let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
+
+        flex.set_margin(10);
+
+        flex.fixed(&cover_widget, 100);
+        flex.fixed(&title_widget, 20);
+        flex.fixed(&artist_widget, 20);
+
+        flex.end();
+    }
+
     /// Parse an audio file's metadata, and return the primary tag. If the primary tag is not found, it will return the first tag.
     /// These tags contain details about the audio, such as the title, artist, etc.
     /// # Errors
@@ -176,35 +205,6 @@ impl NowPlaying {
         let default_cover_path = Path::new("assets/default.png");
 
         SharedImage::load(default_cover_path).unwrap()
-    }
-
-    /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
-    fn create_widgets(metadata_tag: Tag) {
-        const FLEX_WIDTH: i32 = 250;
-        const FLEX_Y: i32 = 100;
-        const FLEX_X_MARGIN: i32 = 100;
-
-        const BUTTON_SPACING: i32 = 100;
-
-        let window_center_x = (400 - FLEX_X_MARGIN) / 2;
-        let flex_x = window_center_x - BUTTON_SPACING;
-
-        let mut flex = group::Flex::default()
-            .with_pos(flex_x, FLEX_Y)
-            .with_size(FLEX_WIDTH, 10)
-            .column();
-
-        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
-        let title_widget = NowPlaying::create_title_widget(&metadata_tag);
-        let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
-
-        flex.set_margin(10);
-
-        flex.fixed(&cover_widget, 40);
-        flex.fixed(&title_widget, 20);
-        flex.fixed(&artist_widget, 20);
-
-        flex.end();
     }
 }
 
