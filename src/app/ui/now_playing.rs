@@ -1,4 +1,4 @@
-use fltk::enums::{Font, FrameType};
+use fltk::enums::{Align, Font, FrameType};
 use fltk::frame::Frame;
 use fltk::group;
 use fltk::image::{JpegImage, PngImage, SharedImage};
@@ -46,7 +46,12 @@ impl NowPlaying {
     }
 
     fn create_text_widget(text: &str, font: Font) -> Output {
+        const FONTSIZE: i32 = 14;
+
+        let text_width = text_width(text, font, FONTSIZE) + 10;
+
         let mut widget = Output::default();
+        widget.set_size(text_width, 1);
 
         // Set the text of the widget
         widget.set_value(text);
@@ -90,6 +95,7 @@ impl NowPlaying {
     fn create_cover_widget(metadata_tag: &Tag) -> Frame {
         const COVER_SIZE: i32 = 100;
 
+        // Note for future me: removing .with_size means the widget has a size of 0, and won't show up
         let mut cover_widget = Frame::default().with_size(COVER_SIZE, COVER_SIZE);
 
         // Extract the image from the metadata tag
@@ -104,14 +110,14 @@ impl NowPlaying {
 
     /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
     fn create_widgets(metadata_tag: Tag) {
-        const FLEX_WIDTH: i32 = 250;
-        const FLEX_Y: i32 = 25;
-        const FLEX_X_MARGIN: i32 = 0;
+        const FLEX_WIDTH: i32 = 400;
+        const FLEX_Y: i32 = 0;
+        // const FLEX_X_MARGIN: i32 = -75;
 
-        const BUTTON_SPACING: i32 = 100;
+        // const BUTTON_SPACING: i32 = 100;
 
-        let window_center_x = (400 - FLEX_X_MARGIN) / 2;
-        let flex_x = window_center_x - BUTTON_SPACING;
+        // let window_center_x = (400 - FLEX_X_MARGIN) / 2;
+        let flex_x = 0;
 
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
@@ -206,6 +212,13 @@ impl NowPlaying {
 
         SharedImage::load(default_cover_path).unwrap()
     }
+}
+
+fn text_width(text: &str, font: Font, fontsize: i32) -> i32 {
+    fltk::draw::set_font(font, fontsize);
+    let (text_width, _) = fltk::draw::measure(text, false);
+
+    text_width
 }
 
 #[cfg(test)]
