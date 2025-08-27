@@ -111,17 +111,15 @@ impl NowPlaying {
     /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
     fn create_widgets(metadata_tag: Tag) {
         const FLEX_WIDTH: i32 = 200;
+        const FLEX_HEIGHT: i32 = 150;
+
         const FLEX_Y: i32 = 25;
-        const FLEX_X_MARGIN: i32 = 0;
 
-        // const BUTTON_SPACING: i32 = 100;
-
-        let window_center_x = ((400 - FLEX_X_MARGIN) / 2) - (FLEX_WIDTH / 2);
-        let flex_x = window_center_x;
+        let flex_x = (400  / 2) - (FLEX_WIDTH / 2);
 
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
-            .with_size(FLEX_WIDTH, 300)
+            .with_size(FLEX_WIDTH, FLEX_HEIGHT)
             .column();
 
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
