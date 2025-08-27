@@ -121,6 +121,7 @@ impl NowPlaying {
             .with_pos(flex_x, FLEX_Y)
             .with_size(FLEX_WIDTH, FLEX_HEIGHT)
             .column();
+        flex.set_margins(50, 0, 25, 0);
 
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
         let title_widget = NowPlaying::create_title_widget(&metadata_tag);
