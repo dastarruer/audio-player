@@ -110,27 +110,39 @@ impl NowPlaying {
 
     /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
     fn create_widgets(metadata_tag: Tag) {
-        const FLEX_WIDTH: i32 = 200;
         const FLEX_HEIGHT: i32 = 150;
 
         const FLEX_Y: i32 = 25;
 
-        let flex_x = (400  / 2) - (FLEX_WIDTH / 2);
+        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
+        let mut title_widget = NowPlaying::create_title_widget(&metadata_tag);
+        title_widget.set_align(Align::Center | Align::Inside);
 
+        let mut artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
+        artist_widget.set_align(Align::Center | Align::Inside);
+
+
+        let flex_width = title_widget.width();
+        let flex_x = (400  / 2) - (flex_width / 2);
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
-            .with_size(FLEX_WIDTH, FLEX_HEIGHT)
+            .with_size(flex_width, FLEX_HEIGHT)
             .column();
-        flex.set_margins(50, 0, 25, 0);
-
-        let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
-        let title_widget = NowPlaying::create_title_widget(&metadata_tag);
-        let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
-
+        flex.add(&cover_widget);
         flex.fixed(&cover_widget, 100);
-        flex.fixed(&title_widget, 20);
-        flex.fixed(&artist_widget, 20);
+
+        let mut title_flex = group::Flex::default()
+            .column();
+        flex.add(&title_flex);
+        flex.fixed(&title_flex, 50);
+
+        // title_flex.set_margins(25, 0, 0, 0);
+        title_flex.add(&title_widget);
+        title_flex.add(&artist_widget);
+        title_flex.fixed(&title_widget, 20);
+        title_flex.fixed(&artist_widget, 20);
         println!("{:?}", flex.bounds());
+        title_flex.end();
         flex.end();
     }
 
