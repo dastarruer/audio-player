@@ -115,34 +115,33 @@ impl NowPlaying {
         const FLEX_Y: i32 = 25;
 
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
-        let mut title_widget = NowPlaying::create_title_widget(&metadata_tag);
-        title_widget.set_align(Align::Center | Align::Inside);
-
-        let mut artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
-        artist_widget.set_align(Align::Center | Align::Inside);
-
+        let title_widget = NowPlaying::create_title_widget(&metadata_tag);
+        let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
 
         let flex_width = title_widget.width();
-        let flex_x = (400  / 2) - (flex_width / 2);
+        let flex_x = (400 / 2) - (flex_width / 2);
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
             .with_size(flex_width, FLEX_HEIGHT)
             .column();
+
         flex.add(&cover_widget);
         flex.fixed(&cover_widget, 100);
 
-        let mut title_flex = group::Flex::default()
-            .column();
-        flex.add(&title_flex);
-        flex.fixed(&title_flex, 50);
+        let mut text_flex = group::Flex::default().column();
 
-        // title_flex.set_margins(25, 0, 0, 0);
-        title_flex.add(&title_widget);
-        title_flex.add(&artist_widget);
-        title_flex.fixed(&title_widget, 20);
-        title_flex.fixed(&artist_widget, 20);
+        flex.add(&text_flex);
+        flex.fixed(&text_flex, 50);
+
+        text_flex.add(&title_widget);
+        text_flex.fixed(&title_widget, 20);
+
+        text_flex.add(&artist_widget);
+        text_flex.fixed(&artist_widget, 20);
+
         println!("{:?}", flex.bounds());
-        title_flex.end();
+
+        text_flex.end();
         flex.end();
     }
 
