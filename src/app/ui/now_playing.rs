@@ -108,7 +108,7 @@ impl NowPlaying {
         cover_widget
     }
 
-    /// Create the cover widget, the title widget, and the artist widget to show the user the cover, title, and artist respectively.
+    /// Create the cover widget, the title widget, and the artist widget
     fn create_widgets(metadata_tag: Tag) {
         const FLEX_HEIGHT: i32 = 150;
 
