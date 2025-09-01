@@ -111,6 +111,7 @@ impl NowPlaying {
 
     /// Create the cover widget, the title widget, and the artist widget
     fn create_widgets(metadata_tag: Tag) {
+        // TODO: Figure out how to center text in a flexbox
         const FLEX_HEIGHT: i32 = 150;
 
         const FLEX_Y: i32 = 25;
@@ -121,6 +122,8 @@ impl NowPlaying {
 
         // flex_width must be the same width as either the title widget or the artist widget (whichever is wider)
         let flex_width = max(title_widget.width(), artist_widget.width());
+
+        // NOTE: for future me this might cause issues in the future
         let flex_x = (400 / 2) - (flex_width / 2);
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
