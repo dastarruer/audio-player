@@ -1,4 +1,4 @@
-use fltk::enums::{Align, Font, FrameType};
+use fltk::enums::{Font, FrameType};
 use fltk::frame::Frame;
 use fltk::group;
 use fltk::image::{JpegImage, PngImage, SharedImage};
@@ -10,6 +10,7 @@ use lofty::picture::{MimeType, PictureType};
 use lofty::read_from_path;
 use lofty::tag::{Accessor, Tag};
 use std::borrow::Cow;
+use std::cmp::max;
 use std::path::Path;
 
 pub struct NowPlaying {}
@@ -118,7 +119,8 @@ impl NowPlaying {
         let title_widget = NowPlaying::create_title_widget(&metadata_tag);
         let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
 
-        let flex_width = title_widget.width();
+        // flex_width must be the same width as either the title widget or the artist widget (whichever is wider)
+        let flex_width = max(title_widget.width(), artist_widget.width());
         let flex_x = (400 / 2) - (flex_width / 2);
         let mut flex = group::Flex::default()
             .with_pos(flex_x, FLEX_Y)
