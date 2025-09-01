@@ -42,23 +42,23 @@ impl NowPlaying {
     }
 
     /// Add a unified style to a text widget. Will apply the same style to all text widgets that are passed to it, so it can be reused.
-    fn style_text_widget(text_widget: &mut Output) {
-        text_widget.set_frame(FrameType::NoBox);
+    fn style_title_widget(title_widget: &mut Output) {
+        title_widget.set_frame(FrameType::NoBox);
     }
 
     fn create_text_widget(text: &str, font: Font) -> Output {
         const FONTSIZE: i32 = 14;
 
-        let text_width = text_width(text, font, FONTSIZE) + 10;
+        let title_width = title_width(text, font, FONTSIZE) + 10;
 
         let mut widget = Output::default();
-        widget.set_size(text_width, 1);
+        widget.set_size(title_width, 1);
 
         // Set the text of the widget
         widget.set_value(text);
         widget.set_text_font(font);
 
-        NowPlaying::style_text_widget(&mut widget);
+        NowPlaying::style_title_widget(&mut widget);
 
         widget
     }
@@ -111,17 +111,16 @@ impl NowPlaying {
 
     /// Create the cover widget, the title widget, and the artist widget
     fn create_widgets(metadata_tag: Tag) {
-        // TODO: Figure out how to center text in a flexbox
         const FLEX_HEIGHT: i32 = 150;
-
         const FLEX_Y: i32 = 25;
+        const FLEX_X_PADDING: i32 = 10; // .Unsure why, but adding some padding seems to 'center' it better. dont ask
 
         let cover_widget = NowPlaying::create_cover_widget(&metadata_tag);
         let title_widget = NowPlaying::create_title_widget(&metadata_tag);
         let artist_widget = NowPlaying::create_artist_widget(&metadata_tag);
 
         // flex_width must be the same width as either the title widget or the artist widget (whichever is wider)
-        let flex_width = max(title_widget.width(), artist_widget.width());
+        let flex_width = max(title_widget.width(), artist_widget.width()) + FLEX_X_PADDING;
 
         // NOTE: for future me this might cause issues in the future
         let flex_x = (400 / 2) - (flex_width / 2);
@@ -133,20 +132,24 @@ impl NowPlaying {
         flex.add(&cover_widget);
         flex.fixed(&cover_widget, 100);
 
-        let mut text_flex = group::Flex::default().column();
+        let mut title_flex = group::Flex::default().column();
+        let title_margin = (flex_width - title_widget.width()) / 2;
+        flex.add(&title_flex);
 
-        flex.add(&text_flex);
-        flex.fixed(&text_flex, 50);
+        title_flex.set_margins(title_margin, 0, title_margin, 0);
+        title_flex.add(&title_widget);
+        title_flex.end();
 
-        text_flex.add(&title_widget);
-        text_flex.fixed(&title_widget, 20);
+        let mut artist_flex = group::Flex::default().column();
+        let artist_margin = (flex_width - artist_widget.width()) / 2;
+        flex.add(&artist_flex);
 
-        text_flex.add(&artist_widget);
-        text_flex.fixed(&artist_widget, 20);
+        artist_flex.set_margins(artist_margin, 0, artist_margin, 0);
+        artist_flex.add(&artist_widget);
+        artist_flex.end();
 
         println!("{:?}", flex.bounds());
 
-        text_flex.end();
         flex.end();
     }
 
@@ -227,11 +230,11 @@ impl NowPlaying {
     }
 }
 
-fn text_width(text: &str, font: Font, fontsize: i32) -> i32 {
+fn title_width(text: &str, font: Font, fontsize: i32) -> i32 {
     fltk::draw::set_font(font, fontsize);
-    let (text_width, _) = fltk::draw::measure(text, false);
+    let (title_width, _) = fltk::draw::measure(text, false);
 
-    text_width
+    title_width
 }
 
 #[cfg(test)]
@@ -518,7 +521,7 @@ mod test {
     //     fn test_title_centering(title: &str) {
     //         let cover_widget = Frame::new(150, 50, 100, 100, "");
 
-    //         let text_width = {
+    //         let title_width = {
     //             fltk::draw::set_font(Font::Helvetica, 14);
     //             let (w, _) = fltk::draw::measure(title, false);
     //             w
@@ -531,7 +534,7 @@ mod test {
 
     //         // Compute left & right margins
     //         let left_margin = title_x - cover_x;
-    //         let right_margin = (cover_x + cover_w) - (title_x + text_width);
+    //         let right_margin = (cover_x + cover_w) - (title_x + title_width);
 
     //         // They should be almost equal
     //         assert!((left_margin - right_margin).abs() <= 1);
