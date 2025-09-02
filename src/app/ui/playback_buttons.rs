@@ -21,6 +21,9 @@ impl PlaybackButtons {
         const FLEX_X_OFFSET: i32 = 45;
 
         const BTN_OFFSET: i32 = 100;
+        const NUM_BUTTONS: i32 = 3;
+
+        const MARGIN: i32 = 55;
 
         // Get center of window
         let center_x = (win_width - FLEX_X_OFFSET) / 2;
@@ -31,15 +34,15 @@ impl PlaybackButtons {
             .with_size(FLEX_WIDTH, 10)
             .row();
 
-        let rewind_btn = PlaybackButtons::create_rewind_button(sender.clone());
+        PlaybackButtons::create_rewind_button(sender.clone());
+        PlaybackButtons::create_play_button(sender.clone());
+        PlaybackButtons::create_fast_forward_button(sender);
 
-        let play_btn = PlaybackButtons::create_play_button(sender.clone());
-
-        let fast_forward_btn = PlaybackButtons::create_fast_forward_button(sender);
-
-        const NUM_BUTTONS: i32 = 3;
         flex.set_spacing(FLEX_WIDTH / NUM_BUTTONS);
+        flex.set_margins(MARGIN, 0, MARGIN, 0);
+
         flex.end();
+
         PlaybackButtons {}
     }
 
