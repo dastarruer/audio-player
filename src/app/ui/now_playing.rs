@@ -148,8 +148,6 @@ impl NowPlaying {
         artist_flex.add(&artist_widget);
         artist_flex.end();
 
-        println!("{:?}", flex.bounds());
-
         flex.end();
     }
 
