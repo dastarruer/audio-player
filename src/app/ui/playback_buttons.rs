@@ -15,8 +15,8 @@ impl PlaybackButtons {
     /// Create new playback buttons
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
         const FLEX_WIDTH: i32 = 250;
-        const FLEX_Y: i32 = 210;
-        const FLEX_X_OFFSET: i32 = 20;
+        const FLEX_Y: i32 = 200;
+        const FLEX_X_OFFSET: i32 = 45;
 
         const BTN_OFFSET: i32 = 100;
 
