@@ -12,6 +12,8 @@ impl PlaybackButtons {
     const PLAY_BUTTON: &str = "";
     const PAUSE_BUTTON: &str = "";
 
+    const BTN_SIZE: i32 = 10;
+
     /// Create new playback buttons
     pub fn new(win_width: i32, sender: mpsc::Sender<Message>) -> PlaybackButtons {
         const FLEX_WIDTH: i32 = 250;
@@ -55,8 +57,11 @@ impl PlaybackButtons {
 
     /// Create the play button and theme it.
     fn create_play_button(sender: mpsc::Sender<Message>) -> Button {
-        let mut play_btn =
-            PlaybackButtons::style_button(Button::default().with_label(Self::PAUSE_BUTTON));
+        let mut play_btn = PlaybackButtons::style_button(
+            Button::default()
+                .with_label(Self::PAUSE_BUTTON)
+                .with_size(Self::BTN_SIZE, Self::BTN_SIZE),
+        );
 
         // Define a function to execute once the button is clicked
         play_btn.set_callback(move |btn| {
@@ -78,8 +83,11 @@ impl PlaybackButtons {
 
     /// Create the fast-forwards button.
     fn create_fast_forward_button(sender: mpsc::Sender<Message>) -> Button {
-        let mut seek_forwards_btn =
-            PlaybackButtons::style_button(Button::default().with_label("󰵱"));
+        let mut seek_forwards_btn = PlaybackButtons::style_button(
+            Button::default()
+                .with_label("󰵱")
+                .with_size(Self::BTN_SIZE, Self::BTN_SIZE),
+        );
 
         seek_forwards_btn.set_callback(move |_| {
             // Send a fast-forward message to the audio thread
@@ -93,8 +101,11 @@ impl PlaybackButtons {
 
     /// Create the rewind button.
     fn create_rewind_button(sender: mpsc::Sender<Message>) -> Button {
-        let mut seek_backwards_btn =
-            PlaybackButtons::style_button(Button::default().with_label("󰴪"));
+        let mut seek_backwards_btn = PlaybackButtons::style_button(
+            Button::default()
+                .with_label("󰴪")
+                .with_size(Self::BTN_SIZE, Self::BTN_SIZE),
+        );
 
         seek_backwards_btn.set_callback(move |_| {
             // Send a rewind message to the audio thread
