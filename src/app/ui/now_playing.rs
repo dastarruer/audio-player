@@ -133,7 +133,7 @@ impl NowPlaying {
         flex.fixed(&cover_widget, 100);
 
         let mut title_flex = group::Flex::default().column();
-        let title_margin = (flex_width - title_widget.width()) / 2;
+        let title_margin = center_margin(flex_width, &title_widget);
         flex.add(&title_flex);
 
         title_flex.set_margins(title_margin, 0, title_margin, 0);
@@ -141,7 +141,7 @@ impl NowPlaying {
         title_flex.end();
 
         let mut artist_flex = group::Flex::default().column();
-        let artist_margin = (flex_width - artist_widget.width()) / 2;
+        let artist_margin = center_margin(flex_width, &artist_widget);
         flex.add(&artist_flex);
 
         artist_flex.set_margins(artist_margin, 0, artist_margin, 0);
@@ -152,6 +152,8 @@ impl NowPlaying {
 
         flex.end();
     }
+
+
 
     /// Parse an audio file's metadata, and return the primary tag. If the primary tag is not found, it will return the first tag.
     /// These tags contain details about the audio, such as the title, artist, etc.
@@ -235,6 +237,11 @@ fn title_width(text: &str, font: Font, fontsize: i32) -> i32 {
     let (title_width, _) = fltk::draw::measure(text, false);
 
     title_width
+}
+
+/// Get the left and right margin required to center a widget inside its flexbox.
+fn center_margin(flex_width: i32, widget: &impl WidgetExt) -> i32 {
+    (flex_width - widget.width()) / 2
 }
 
 #[cfg(test)]
